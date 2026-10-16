@@ -15,7 +15,7 @@
     children.get(p).push(g.id);
   }
 
-  const state = { q: '', off: new Set(), view: 'timeline' };
+  const state = { q: '', off: new Set(), view: 'timeline', chEss: false };
   const $ = (s) => document.querySelector(s);
   const el = (tag, attrs = {}, parent) => {
     const n = document.createElementNS(NS, tag);
@@ -57,6 +57,14 @@
   }
 
   $('#q').addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+  // En móvil la búsqueda y las familias van plegadas tras el botón «Filtros».
+  const ctl = $('.controls');
+  $('#ftoggle').onclick = () => {
+    const on = ctl.classList.toggle('fopen');
+    $('#ftoggle').setAttribute('aria-expanded', on);
+    fitScrollers();
+    if (on) $('#q').focus();
+  };
   document.querySelectorAll('.views button').forEach((b) => b.onclick = () => {
     state.view = b.dataset.view;
     document.querySelectorAll('.views button').forEach((o) => o.classList.toggle('on', o === b));
@@ -221,13 +229,80 @@
       <p class="fine">Páginas estimadas sobre el ePub (300 palabras/pág.); el ePub no incluye la paginación impresa.</p>`;
   }
   const YT = window.LOOPS_YT || {};
-  function trackHtml(t) {
+  function trackHtml(t, extra = '') {
     const v = YT[`${t.a}|${t.t}`];
     const search = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(`${t.a} ${t.t}`.replace(/\([^)]*\)/g, ''));
     const links = v
       ? `<button class="play" data-v="${esc(v.id)}" title="Reproducir aquí: ${esc(v.title)}">▶</button><a href="https://www.youtube.com/watch?v=${esc(v.id)}" target="_blank" rel="noopener" title="${esc(v.title)} · ${esc(v.channel)}">↗</a>`
       : `<a href="${search}" target="_blank" rel="noopener" title="Buscar en YouTube">🔍</a>`;
-    return `<li${t.ess ? ' class="ess" title="Discografía seleccionada del libro"' : ''}><span class="tt">${t.ess ? '<i class="star">★</i> ' : ''}<b>${esc(t.a)}</b> — ${esc(t.t)} ${t.y ? `<span class="y">(${t.y})</span>` : ''}</span><span class="act">${links}</span></li>`;
+    return `<li${t.ess ? ' class="ess" title="Discografía seleccionada del libro"' : ''}><span class="tt">${t.ess ? '<i class="star">★</i> ' : ''}<b>${esc(t.a)}</b> — ${esc(t.t)} ${t.y ? `<span class="y">(${t.y})</span>` : ''}${extra}</span><span class="act">${links}</span></li>`;
+  }
+
+  // Un único reproductor en toda la página: se abre bajo el disco pulsado y se cierra al volver a pulsarlo.
+  function togglePlayer(b) {
+    const li = b.closest('li');
+    const prev = $('.player');
+    const same = prev && prev.parentElement === li;
+    if (prev) prev.remove();
+    if (same) return;
+    li.insertAdjacentHTML('beforeend', `<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.v}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`);
+  }
+
+  // ---------- Discos, esenciales y por capítulo ----------
+  // La búsqueda filtra por artista, título o nombre del género; los chips de familia, por género.
+  function trackMatches(g, t) {
+    if (state.off.has(g.family)) return false;
+    return !state.q || `${t.a} ${t.t} ${g.name}`.toLowerCase().includes(state.q);
+  }
+  const byYear = (a, b) => (a.y || 9999) - (b.y || 9999) || a.a.localeCompare(b.a, 'es');
+  const dot = (g) => `<i class="dot" style="background:${FAMILIES[g.family].color}"></i>`;
+  const genreLink = (g) => `<button class="glink" data-go="${g.id}">${dot(g)}${esc(g.name)}</button>`;
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+  function discGroups(box, groups, unit, tools = '') {
+    const n = groups.reduce((s, gr) => s + gr.tracks.length, 0);
+    const openAll = groups.length <= 12 || box.id === 'ess';
+    box.innerHTML = `<div class="dbar"><span>${plural(n, 'disco', 'discos')} · ${plural(groups.length, unit[0], unit[1])}</span>${tools}<button data-fold="1">Desplegar todo</button><button data-fold="0">Plegar todo</button></div>`
+      + (groups.length ? groups.map((gr) => `<details class="dgroup"${openAll ? ' open' : ''}><summary>${gr.head}<span class="n">${gr.tracks.length}</span></summary><ol class="tracks">${gr.tracks.map(gr.row).join('')}</ol></details>`).join('')
+        : '<p class="hint">Nada coincide con la búsqueda.</p>');
+  }
+  function renderDiscs(id, onlyEss) {
+    const groups = [];
+    for (const g of all.slice().sort((a, b) => a.start - b.start || a.name.localeCompare(b.name, 'es'))) {
+      const tracks = g.tracks.filter((t) => (!onlyEss || t.ess) && trackMatches(g, t)).sort(byYear);
+      if (tracks.length) groups.push({ head: `${dot(g)}<b>${esc(g.name)}</b><span class="yrs">${g.start}–${g.end ?? '…'}</span><button class="glink" data-go="${g.id}">ficha</button>`, tracks, row: (t) => trackHtml(t) });
+    }
+    discGroups($('#' + id), groups, ['género', 'géneros']);
+  }
+  function renderByChapter() {
+    // Un mismo disco puede figurar en varios géneros: se agrupa por artista y título.
+    const byCh = new Map();
+    for (const g of all) for (const t of g.tracks) {
+      if ((state.chEss && !t.ess) || !trackMatches(g, t)) continue;
+      for (const ch of t.chs || []) {
+        if (!byCh.has(ch)) byCh.set(ch, new Map());
+        const k = `${t.a}|${t.t}`.toLowerCase();
+        const m = byCh.get(ch);
+        if (!m.has(k)) m.set(k, { ...t, genres: [] });
+        m.get(k).genres.push(g);
+      }
+    }
+    const groups = chapters.filter((c) => byCh.has(c.n)).map((c) => ({
+      head: `<b>${esc(chapterName(c.n))}</b>`,
+      tracks: [...byCh.get(c.n).values()].sort(byYear),
+      row: (t) => trackHtml(t, `<span class="gl">${t.genres.map(genreLink).join('')}</span>`),
+    }));
+    discGroups($('#bych'), groups, ['capítulo', 'capítulos'], `<label><input type="checkbox" id="chess"${state.chEss ? ' checked' : ''}> Solo esenciales ★</label>`);
+  }
+  for (const box of document.querySelectorAll('.discs')) {
+    box.addEventListener('click', (e) => {
+      const b = e.target.closest('button, input');
+      if (!b) return;
+      if (b.matches('.play')) togglePlayer(b);
+      else if (b.dataset.go) { e.preventDefault(); open(b.dataset.go); }
+      else if (b.dataset.fold) box.querySelectorAll('details').forEach((d) => d.open = b.dataset.fold === '1');
+      else if (b.id === 'chess') { state.chEss = b.checked; renderByChapter(); }
+    });
   }
 
   function open(id) {
@@ -255,14 +330,7 @@
     `;
     $('#detail').querySelectorAll('[data-go]').forEach((b) => b.onclick = () => open(b.dataset.go));
     $('#detail').querySelector('[data-focus]').onclick = () => showFocus(id);
-    $('#detail').querySelectorAll('.play').forEach((b) => b.onclick = () => {
-      const li = b.closest('li');
-      const prev = $('#detail .player');
-      const same = prev && prev.parentElement === li;
-      if (prev) prev.remove();
-      if (same) return;
-      li.insertAdjacentHTML('beforeend', `<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${b.dataset.v}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`);
-    });
+    $('#detail').querySelectorAll('.play').forEach((b) => b.onclick = () => togglePlayer(b));
     $('#panel').classList.add('open');
     $('#panel').setAttribute('aria-hidden', 'false');
     $('#panel').scrollTop = 0;
@@ -400,7 +468,9 @@
   }
   window.addEventListener('resize', fitScrollers);
   document.querySelectorAll('.views button').forEach((b) => b.addEventListener('click', fitScrollers));
-  function render() { renderTimeline(); renderList(); stickMain(); fitScrollers(); }
+  function render() {
+    $('#ftoggle').classList.toggle('active', !!state.q || state.off.size > 0);
+    renderTimeline(); renderList(); renderDiscs('discs', false); renderDiscs('ess', true); renderByChapter(); stickMain(); fitScrollers(); }
   render();
   const hash = location.hash.slice(1);
   if (hash.startsWith('focus=') && byId.has(hash.slice(6))) showFocus(hash.slice(6));

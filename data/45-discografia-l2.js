@@ -1,7 +1,7 @@
 // «Discografía seleccionada» de Loops 2: discos recomendados por capítulo (ess: 1 = esencial ★).
 LOOPS.chapter({ n: 114, book: 2, label: 'Loops 2', title: 'Discografía seleccionada', author: 'Javier Blánquez' });
 LOOPS.add([
-  // 1
+  { sec: 101 },
   { id: 'eurotrance', tracks: [{ a: 'Alice Deejay', t: 'Who Needs Guitars Anyway?', y: 2000, ess: 1 }] },
   { id: 'trance-holandes', tracks: [
     { a: 'Armin van Buuren', t: 'A State of Trance 2005', y: 2005, ess: 1 },
@@ -29,7 +29,7 @@ LOOPS.add([
     { a: 'Nathan Fake', t: 'The Sky Was Pink (James Holden Remix)', y: 2004, ess: 1 },
   ] },
   { id: 'trance', tracks: [{ a: 'Paul van Dyk', t: 'Out There and Back', y: 2000, ess: 1 }] },
-  // 2
+  { sec: 102 },
   { id: 'mash-up', tracks: [
     { a: '2 Many DJ\'s', t: 'As Heard on Radio Soulwax Pt. 2', y: 2002, ess: 1 },
     { a: 'Girl Talk', t: 'Night Ripper', y: 2006, ess: 1 },
@@ -56,7 +56,7 @@ LOOPS.add([
   ] },
   { id: 'dance-pop', tracks: [{ a: 'Madonna', t: 'Confessions on a Dance Floor', y: 2005, ess: 1 }] },
   { id: 'electrohouse', tracks: [{ a: 'Tiga', t: 'Sexor', y: 2006, yq: 'Tiga Sexor album', ess: 1 }] },
-  // 3
+  { sec: 103 },
   { id: 'sonido-colonia', tracks: [
     { a: 'Closer Musik', t: 'After Love', y: 2002, ess: 1 },
     { a: 'DJ Koze', t: 'Kosi Comes Around', y: 2005, ess: 1 },
@@ -84,7 +84,7 @@ LOOPS.add([
   ] },
   { id: 'prog-pastoral', tracks: [{ a: 'Trentemøller', t: 'The Last Resort', y: 2006, ess: 1 }] },
   { id: 'maximal-techno', tracks: [{ a: 'Rex the Dog', t: 'The Rex the Dog Show', y: 2008, ess: 1 }] },
-  // 4
+  { sec: 104 },
   { id: 'dubstep', tracks: [
     { a: 'Burial', t: 'Untrue', y: 2007, ess: 1 },
     { a: 'Digital Mystikz', t: 'Return II Space', y: 2010, ess: 1 },
@@ -112,7 +112,7 @@ LOOPS.add([
     { a: 'Mount Kimbie', t: 'Crooks & Lovers', y: 2010, ess: 1 },
     { a: 'Shackleton & Appleblim', t: 'Soundboy Punishments', y: 2007, ess: 1 },
   ] },
-  // 5
+  { sec: 105 },
   { id: 'rnb-pop', tracks: [
     { a: 'Aaliyah', t: 'Aaliyah', y: 2001, ess: 1 },
     { a: 'Justin Timberlake', t: 'Justified', y: 2002, ess: 1 },
@@ -148,7 +148,7 @@ LOOPS.add([
     { a: 'Nelly', t: 'Nellyville', y: 2002, ess: 1 },
     { a: 'OutKast', t: 'Stankonia', y: 2000, ess: 1 },
   ] },
-  // 6
+  { sec: 106 },
   { id: 'detroit-2', tracks: [
     { a: 'Aardvarck', t: 'Cult Copy', y: 2005, ess: 1 },
     { a: 'Newworldaquarium', t: 'The Dead Bears', y: 2007, ess: 1 },
@@ -186,7 +186,7 @@ LOOPS.add([
     { a: 'Omar-S', t: 'It Can Be Done but Only I Can Do It', y: 2011, ess: 1 },
     { a: 'Theo Parrish', t: 'American Intelligence', y: 2014, ess: 1 },
   ] },
-  // 7
+  { sec: 107 },
   { id: 'hauntology', tracks: [
     { a: 'William Basinski', t: 'The Disintegration Loops', y: 2002, ess: 1 },
     { a: 'Boards of Canada', t: 'Geogaddi', y: 2002, ess: 1 },
@@ -218,7 +218,7 @@ LOOPS.add([
   ] },
   { id: 'revival-new-age', tracks: [{ a: 'Iasos', t: 'Celestial Soul Portrait', y: 2013, ess: 1 }] },
   { id: 'hipnagogia', tracks: [{ a: 'Panda Bear', t: 'Person Pitch', y: 2007, ess: 1 }] },
-  // 8
+  { sec: 108 },
   { id: 'experimental-techno', tracks: [
     { a: 'Alva Noto & Ryuichi Sakamoto', t: 'Insen', y: 2005, ess: 1 },
     { a: 'Byetone', t: 'Death of a Typographer', y: 2008, ess: 1 },
@@ -254,7 +254,7 @@ LOOPS.add([
     { a: 'Taylor Deupree', t: 'Northern', y: 2006, ess: 1 },
     { a: 'Tujiko Noriko', t: 'Hard ni Sasete (Make Me Hard)', y: 2002, ess: 1 },
   ] },
-  // 9
+  { sec: 109 },
   { id: 'xenomania', tracks: [
     { a: 'Acid Arab', t: 'Collections', y: 2013, ess: 1 },
     { a: 'Deena Abdelwahed', t: 'Klabb', y: 2017, ess: 1 },
@@ -288,7 +288,7 @@ LOOPS.add([
   { id: 'dancehall-pop', tracks: [{ a: 'Major Lazer', t: 'Guns Don\'t Kill People... Lazers Do', y: 2009, ess: 1 }] },
   { id: 'electro-chaabi', tracks: [{ a: 'Omar Souleyman', t: 'Highway to Hassake', y: 2007, ess: 1 }] },
   { id: 'dancehall-refix', tracks: [{ a: 'Varios', t: 'Diwali Riddim', y: 2002, ess: 1 }] },
-  // 10
+  { sec: 110 },
   { id: 'edm', tracks: [
     { a: 'Avicii', t: 'True', y: 2013, ess: 1 },
     { a: 'Black Eyed Peas', t: 'The E.N.D.', y: 2009, ess: 1 },
@@ -316,7 +316,7 @@ LOOPS.add([
   { id: 'hiphop', tracks: [{ a: 'Kanye West', t: 'Yeezus', y: 2013, ess: 1 }] },
   { id: 'complextro', tracks: [{ a: 'Porter Robinson', t: 'Worlds', y: 2014, ess: 1 }] },
   { id: 'brostep', tracks: [{ a: 'Skrillex', t: 'Scary Monsters and Nice Sprites', y: 2010, ess: 1 }] },
-  // 11
+  { sec: 111 },
   { id: 'balearic-cosmic', tracks: [
     { a: 'Axel Boman', t: 'Family Vacation', y: 2013, ess: 1 },
     { a: 'Lindstrøm', t: 'Where You Go I Go Too', y: 2008, ess: 1 },
@@ -355,7 +355,7 @@ LOOPS.add([
     { a: 'Zomby', t: 'Dedication', y: 2011, ess: 1 },
   ] },
   { id: 'uk-funky', tracks: [{ a: 'Roska', t: 'Roska', y: 2010, ess: 1 }] },
-  // 12
+  { sec: 112 },
   { id: 'outsider-house', tracks: [
     { a: 'Actress', t: 'Splazsh', y: 2010, ess: 1 },
     { a: 'Floating Points', t: 'Elaenia', y: 2015, ess: 1 },

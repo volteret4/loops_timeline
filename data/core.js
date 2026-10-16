@@ -29,8 +29,17 @@ window.LOOPS = (function () {
     return out;
   }
 
+  // Anota en cada disco los capítulos que lo citan.
+  function cite(tracks, t, ch) {
+    const m = tracks.find((x) => key(x) === key(t));
+    if (m && ch != null) m.chs = mergeArr(m.chs, [ch]);
+  }
+
+  // En las discografías, un elemento { sec: n } indica a qué capítulo pertenecen los discos siguientes.
   function add(list, chapter) {
+    let sec = chapter;
     for (const g of list) {
+      if (g.sec != null) { sec = g.sec; continue; }
       const prev = genres.get(g.id);
       if (!prev) {
         genres.set(g.id, {
@@ -41,12 +50,16 @@ window.LOOPS = (function () {
           chapters: chapter != null ? [chapter] : [],
           _datedBy: chapter,
         });
+        const cur = genres.get(g.id);
+        cur.tracks = cur.tracks.map((t) => ({ ...t }));
+        for (const t of cur.tracks) cite(cur.tracks, t, sec);
         continue;
       }
       for (const f of ['aka', 'influences', 'artists', 'labels', 'places']) prev[f] = mergeArr(prev[f], g[f]);
       prev.tracks = mergeArr(prev.tracks, g.tracks, key);
       // La discografía seleccionada del libro marca discos ya presentes como esenciales.
       for (const t of g.tracks || []) if (t.ess) { const m = prev.tracks.find((x) => key(x) === key(t)); if (m) m.ess = 1; }
+      for (const t of g.tracks || []) cite(prev.tracks, t, sec);
       prev.refs = mergeArr(prev.refs, (g.refs || []).map((r) => ({ ch: chapter, ...r })), (r) => r.q);
       // Las fechas y el lugar de los mapas (0 y 99) son provisionales: el primer capítulo que los da manda.
       const fromMap = isMap(prev._datedBy) && !isMap(chapter);

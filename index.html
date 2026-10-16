@@ -17,10 +17,14 @@
 
 <nav class="controls">
   <input id="q" type="search" placeholder="Buscar género, artista, canción…" autocomplete="off">
+  <button id="ftoggle" class="ftoggle" type="button" aria-expanded="false">Filtros</button>
   <div class="views" role="tablist">
     <button data-view="timeline" class="on">Timeline</button>
     <button data-view="focus">Individual</button>
     <button data-view="list">Lista</button>
+    <button data-view="discs">Discos</button>
+    <button data-view="ess">Esenciales</button>
+    <button data-view="bych">Capítulos</button>
   </div>
   <div class="families" id="families"></div>
 </nav>
@@ -40,6 +44,9 @@
     <div class="scroller" id="fscroller"><svg id="fsvg"></svg></div>
   </section>
   <section id="list" class="view"></section>
+  <section id="discs" class="view discs"></section>
+  <section id="ess" class="view discs"></section>
+  <section id="bych" class="view discs"></section>
 </main>
 
 <aside id="panel" aria-hidden="true">

@@ -96,45 +96,15 @@ svg .links path.in { stroke: var(--muted); stroke-dasharray: 4 3; }
 #detail .tags { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 13px; }
 #detail .tags span { background: var(--bg); border: 1px solid var(--line); padding: 1px 8px; border-radius: 4px; }
 #detail ol { padding-left: 20px; margin: 0; }
-#detail ol.tracks li { margin: 4px 0; font-size: 14px; }
-#detail ol.tracks li { display: list-item; }
-#detail ol.tracks .tt { margin-right: 6px; }
-#detail ol.tracks .y { color: var(--muted); font-variant-numeric: tabular-nums; }
-#detail ol.tracks .act { white-space: nowrap; }
-#detail ol.tracks .act a, #detail ol.tracks .act button { display: inline-block; border: 1px solid var(--line); background: var(--bg); color: var(--accent); border-radius: 4px; padding: 0 6px; margin-left: 2px; font: 12px/18px inherit; text-decoration: none; cursor: pointer; }
-#detail .player { margin: 6px 0 10px; aspect-ratio: 16 / 9; }
-#detail .player iframe { width: 100%; height: 100%; border: 0; border-radius: 6px; }
+ol.tracks li { margin: 4px 0; font-size: 14px; }
+ol.tracks li { display: list-item; }
+ol.tracks .tt { margin-right: 6px; }
+ol.tracks .y { color: var(--muted); font-variant-numeric: tabular-nums; }
+ol.tracks .act { white-space: nowrap; }
+ol.tracks .act a, ol.tracks .act button { display: inline-block; border: 1px solid var(--line); background: var(--bg); color: var(--accent); border-radius: 4px; padding: 0 6px; margin-left: 2px; font: 12px/18px inherit; text-decoration: none; cursor: pointer; }
+.player { margin: 6px 0 10px; aspect-ratio: 16 / 9; }
+.player iframe { width: 100%; height: 100%; border: 0; border-radius: 6px; }
 
-@media (max-width: 640px) {
-  .top { padding: 16px 16px 8px; }
-  .top h1 { font-size: 22px; }
-  .top h1 span { display: block; font-size: 14px; }
-  .controls { padding: 8px 16px; position: static; }
-  .controls input { flex-basis: 100%; }
-  #list { padding: 8px 16px 60px; }
-  .hint { padding: 6px 16px; }
-  .progress { text-align: left; }
-  .progress .bar { margin-left: 0; }
-  /* En móvil la cabecera se compacta para dejar el alto de pantalla al timeline. */
-  .top { gap: 6px; }
-  .top h1 span { font-size: 13px; }
-  .sub { display: none; }
-  .progress { font-size: 12px; }
-  .progress .bar { width: 100%; height: 4px; margin-top: 4px; }
-  .controls { gap: 8px; }
-  .views { flex: 1 1 100%; }
-  .views button { flex: 1; padding: 8px 6px; }
-  .families { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 2px; }
-  .families::-webkit-scrollbar { display: none; }
-  .chip { flex: none; white-space: nowrap; }
-  #focus .fbar, #focus .hint { padding: 0 16px; }
-  .fbar input { min-width: 0; }
-  #panel { padding: 16px 16px 60px; }
-  .close { position: sticky; top: 0; float: right; margin: -8px -6px 0 0; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; }
-  #detail h2 { font-size: 22px; margin-right: 0; }
-  #detail ol.tracks .act { white-space: normal; }
-  #detail ol.tracks .act a, #detail ol.tracks .act button { padding: 2px 10px; font-size: 14px; }
-}
 .hint .touch { display: none; }
 @media (hover: none) {
   .hint .mouse { display: none; }
@@ -151,8 +121,8 @@ svg .links path.in { stroke: var(--muted); stroke-dasharray: 4 3; }
 #detail details.ref summary { cursor: pointer; }
 #detail details.ref blockquote { margin: 6px 0 4px; padding-left: 12px; border-left: 2px solid var(--line); font-family: Georgia, "Times New Roman", serif; font-size: 14.5px; line-height: 1.55; }
 #detail mark { background: color-mix(in srgb, var(--accent) 28%, transparent); color: inherit; padding: 0 2px; border-radius: 2px; }
-#detail ol.tracks .star { color: var(--accent); font-style: normal; }
-#detail ol.tracks li.ess .tt b { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+ol.tracks .star { color: var(--accent); font-style: normal; }
+ol.tracks li.ess .tt b { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
 
 /* Eje de años fijo arriba */
 svg .year-tags text { fill: var(--muted); font-size: 11px; }
@@ -170,3 +140,70 @@ svg .fbtn rect { fill: var(--surface); stroke: var(--line); }
 svg .fbtn text { fill: var(--ink); font-size: 14px; font-weight: 700; }
 svg .fbtn:hover rect { stroke: var(--ink); }
 #focus .fbar, #focus .hint { padding: 0 24px; }
+
+/* Discos, esenciales y por capítulo */
+ol.tracks { padding-left: 20px; margin: 0; }
+.discs { padding: 8px 24px 60px; }
+.dbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 4px 0 12px; color: var(--muted); font-size: 13px; }
+.dbar span { margin-right: auto; }
+.dbar button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 4px 10px; font: inherit; cursor: pointer; }
+.dbar label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); cursor: pointer; }
+.dgroup { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; margin: 0 0 8px; }
+.dgroup summary { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; list-style: none; }
+.dgroup summary::-webkit-details-marker { display: none; }
+.dgroup summary::before { content: ''; flex: none; width: 6px; height: 6px; margin: 0 4px 0 2px; border: solid var(--muted); border-width: 0 2px 2px 0; transform: rotate(-45deg); transition: transform .15s; }
+.dgroup[open] summary::before { transform: rotate(45deg); }
+.dgroup summary b { min-width: 0; }
+.dgroup summary .n { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.dgroup .yrs { color: var(--muted); font-size: 12px; }
+.dgroup ol.tracks { padding: 0 14px 12px 38px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.glink { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 999px; padding: 0 8px; font: 12px/18px inherit; cursor: pointer; }
+.gl { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; vertical-align: middle; }
+.ftoggle { display: none; }
+
+/* Cabecera compacta: todo lo posible del alto de pantalla para el contenido. */
+.top { padding: 14px 24px 6px; gap: 4px 24px; align-items: center; }
+.top h1 { font-size: 22px; }
+.top h1 span { font-size: 15px; }
+.sub { font-size: 13px; margin-top: 2px; }
+.controls { padding: 8px 24px; }
+.views { flex-wrap: wrap; }
+/* Familias en una sola fila con scroll horizontal, junto a la búsqueda y las pestañas. */
+.families { flex: 1 1 320px; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.chip { flex: none; white-space: nowrap; }
+
+@media (max-width: 900px), (max-height: 900px) {
+  .sub { display: none; }
+}
+@media (max-width: 640px) {
+  .top { padding: 8px 16px 4px; flex-wrap: nowrap; align-items: center; }
+  .top h1 { font-size: 18px; white-space: nowrap; }
+  .top h1 span { display: none; }
+  /* El progreso queda en una línea corta junto al título. */
+  .progress { font-size: 0; flex: 1; }
+  .progress .bar { width: 100%; height: 3px; margin: 0; }
+  .controls { position: static; padding: 6px 16px 8px; gap: 8px; flex-wrap: wrap; }
+  .views { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .views::-webkit-scrollbar { display: none; }
+  .views button { flex: none; padding: 7px 11px; }
+  .ftoggle { display: block; order: 2; flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 7px 11px; font: inherit; cursor: pointer; }
+  .ftoggle.active { border-color: var(--accent); color: var(--accent); }
+  .controls input#q, .families { display: none; order: 3; }
+  .controls.fopen input#q { display: block; flex-basis: 100%; }
+  .controls.fopen .families { display: flex; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 2px; }
+  .families::-webkit-scrollbar { display: none; }
+  .hint { padding: 4px 16px; font-size: 12px; }
+  #list, .discs { padding: 8px 16px 60px; }
+  #focus .fbar, #focus .hint { padding: 0 16px; }
+  .fbar input { min-width: 0; }
+  .dgroup summary { padding: 10px 12px; }
+  .dgroup .yrs { display: none; }
+  .dbar span { flex-basis: 100%; }
+  .dgroup ol.tracks { padding: 0 12px 12px 30px; }
+  #panel { padding: 16px 16px 60px; }
+  .close { position: sticky; top: 0; float: right; margin: -8px -6px 0 0; width: 40px; height: 40px; background: var(--surface); border-radius: 50%; }
+  #detail h2 { font-size: 22px; margin-right: 0; }
+  ol.tracks .act { white-space: normal; }
+  ol.tracks .act a, ol.tracks .act button { padding: 2px 10px; font-size: 14px; }
+}

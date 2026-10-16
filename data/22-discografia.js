@@ -1,7 +1,7 @@
 // «Discografía seleccionada» del libro: discos recomendados por capítulo (ess: 1 = esencial ★).
 LOOPS.chapter({ n: 22, title: 'Discografía seleccionada', author: 'Loops' });
 LOOPS.add([
-  // 1
+  { sec: 1 },
   { id: 'electroacustica', tracks: [{ a: 'François Bayle', t: 'Érosphère', y: 1980, ess: 1 }] },
   { id: 'concreta', tracks: [
     { a: 'Pierre Henry & Michel Colombier', t: 'Psyché Rock (Messe pour le temps présent)', y: 1967, ess: 1 },
@@ -17,7 +17,7 @@ LOOPS.add([
   { id: 'luthiers', tracks: [{ a: 'Varios', t: 'Early Modulations: Vintage Volts', y: 1999, yq: '-', ess: 1 }] },
   { id: 'futurismo', tracks: [{ a: 'Varios', t: 'Futurism & Dada Reviewed', y: 1988, ess: 1 }] },
   { id: 'aleatoria', tracks: [{ a: 'Varios', t: 'OHM: The Early Gurus of Electronic Music', y: 2000, ess: 1 }] },
-  // 2
+  { sec: 2 },
   { id: 'sintetistas', tracks: [{ a: 'Wendy Carlos', t: 'A Clockwork Orange (BSO)', y: 1971, ess: 1 }] },
   { id: 'psicodelia-electronica', tracks: [{ a: 'Silver Apples', t: 'Silver Apples', y: 1968, ess: 1 }] },
   { id: 'krautrock', tracks: [
@@ -38,7 +38,7 @@ LOOPS.add([
     { a: 'Suicide', t: 'Ghost Rider', y: 1977, ess: 1 },
     { a: 'Laurie Anderson', t: 'Big Science', y: 1982, ess: 1 },
   ] },
-  // 3
+  { sec: 3 },
   { id: 'dub-postpunk', tracks: [
     { a: 'African Head Charge', t: 'My Life in a Hole in the Ground', y: 1981, ess: 1 },
     { a: 'Missing Brazilians', t: 'Warzone', y: 1984, ess: 1 },
@@ -57,7 +57,7 @@ LOOPS.add([
     { a: 'U Roy', t: 'Version Galore', y: 1971, ess: 1 },
     { a: 'Varios', t: 'Jamaican Deejay Music 1969-1973', y: 2000, ess: 1 },
   ] },
-  // 4
+  { sec: 4 },
   { id: 'synthpop-pioneros', tracks: [
     { a: 'Kraftwerk', t: 'Autobahn', y: 1974, ess: 1 },
     { a: 'Kraftwerk', t: 'Radioactivity', y: 1975, ess: 1 },
@@ -66,7 +66,7 @@ LOOPS.add([
     { a: 'Kraftwerk', t: 'Computer World', y: 1981, ess: 1 },
     { a: 'Kraftwerk', t: 'Tour de France', y: 1983, ess: 1 },
   ] },
-  // 5
+  { sec: 5 },
   { id: 'hi-nrg', tracks: [
     { a: 'Patrick Cowley', t: 'Mind Warp', y: 1982, ess: 1 },
     { a: 'Bobby O', t: 'Bobby O Greatest Hits', y: 1990, ess: 1 },
@@ -84,7 +84,7 @@ LOOPS.add([
     { a: 'Varios', t: 'The Disco Box', y: 1999, ess: 1 },
   ] },
   { id: 'garage', tracks: [{ a: 'Larry Levan', t: 'Larry Levan Live at the Paradise Garage', y: 2000, ess: 1 }] },
-  // 6
+  { sec: 6 },
   { id: 'sheffield', tracks: [{ a: 'Cabaret Voltaire', t: 'Mix-Up', y: 1979, ess: 1 }] },
   { id: 'industrial', tracks: [
     { a: 'Chris & Cosey', t: 'Trance', y: 1982, ess: 1 },
@@ -100,7 +100,7 @@ LOOPS.add([
     { a: 'SPK', t: 'Information Overload Unit', y: 1981, ess: 1 },
     { a: 'Whitehouse', t: 'Great White Death', y: 1985, ess: 1 },
   ] },
-  // 7
+  { sec: 7 },
   { id: 'old-school', tracks: [
     { a: 'Cold Crush Brothers', t: 'Fresh, Wild, Fly & Bold', y: 1984, ess: 1 },
     { a: 'Rammellzee & K-Rob', t: 'Beat Bop', y: 1983, ess: 1 },
@@ -132,7 +132,7 @@ LOOPS.add([
   ] },
   { id: 'miami-bass', tracks: [{ a: 'Maggotron', t: 'Bass Invaders', y: 1984, ess: 1 }] },
   { id: 'electro', tracks: [{ a: 'Rodney O & Joe Cooley', t: 'Everlasting Bass', y: 1986, ess: 1 }] },
-  // 8
+  { sec: 8 },
   { id: 'ambient-pop', tracks: [{ a: 'Cocteau Twins', t: 'Garlands', y: 1982, ess: 1 }] },
   { id: 'ndw', tracks: [{ a: 'DAF', t: 'Alles ist gut', y: 1981, ess: 1 }] },
   { id: 'synthpop', tracks: [
@@ -154,7 +154,7 @@ LOOPS.add([
   { id: 'ebm', tracks: [{ a: 'Nitzer Ebb', t: 'That Total Age', y: 1987, ess: 1 }] },
   { id: 'new-wave', tracks: [{ a: 'Talking Heads', t: 'More Songs About Buildings and Food', y: 1978, ess: 1 }] },
   { id: 'technopop-japones', tracks: [{ a: 'Yellow Magic Orchestra', t: 'Technodelic', y: 1981, ess: 1 }] },
-  // 9
+  { sec: 9 },
   { id: 'acid-house', tracks: [
     { a: 'Bam Bam', t: 'King of the Underground', y: 1990, ess: 1 },
     { a: 'Varios', t: 'Acieed Inferno', y: 1988, ess: 1 },
@@ -176,7 +176,7 @@ LOOPS.add([
   { id: 'eurobeat', tracks: [{ a: 'Technotronic', t: 'Pump Up the Jam', y: 1989, ess: 1 }] },
   { id: 'chicago-hardhouse', tracks: [{ a: 'Varios', t: 'Future Sound of Chicago', y: 1995, ess: 1 }] },
   { id: 'deep-house', tracks: [{ a: 'Varios', t: 'This Is Strictly Rhythm', y: 1991, ess: 1 }] },
-  // 10
+  { sec: 10 },
   { id: 'techno-belga', tracks: [{ a: 'Joey Beltram', t: 'Beltram Vol. 1', y: 1990, ess: 1 }, { a: 'Varios', t: 'In Order to Dance III', y: 1992, ess: 1 }] },
   { id: 'detroit-techno', tracks: [
     { a: 'Cybotron', t: 'Enter', y: 1983, ess: 1 },
@@ -201,7 +201,7 @@ LOOPS.add([
   ] },
   { id: 'techno-aleman', tracks: [{ a: 'X-102', t: 'Discovers the Rings of Saturn', y: 1992, ess: 1 }] },
   { id: 'techno-holandes', tracks: [{ a: 'Varios', t: 'Mission Underground', y: 1994, ess: 1 }] },
-  // 11
+  { sec: 11 },
   { id: 'acid-house', tracks: [
     { a: '808 State', t: 'Newbuild', y: 1988, ess: 1 },
     { a: 'A Guy Called Gerald', t: 'Voodoo Ray', y: 1988, ess: 1 },
@@ -219,7 +219,7 @@ LOOPS.add([
   ] },
   { id: 'uk-hardcore', tracks: [{ a: 'The Prodigy', t: 'Experience', y: 1992, ess: 1 }] },
   { id: 'bleep', tracks: [{ a: 'Varios', t: 'Warp 10+1: Influences', y: 1999, ess: 1 }, { a: 'LFO', t: 'Frequencies', y: 1991, ess: 1 }] },
-  // 12
+  { sec: 12 },
   { id: 'idm', tracks: [
     { a: 'Aphex Twin', t: 'Classics', y: 1995, ess: 1 },
     { a: 'Autechre', t: 'Incunabula', y: 1993, ess: 1 },
@@ -241,7 +241,7 @@ LOOPS.add([
   { id: 'chill-out', tracks: [{ a: 'The KLF', t: 'Chill Out', y: 1990, ess: 1 }, { a: 'The Orb', t: 'U.F.Orb', y: 1992, ess: 1 }] },
   { id: 'ambient-dub', tracks: [{ a: 'The Sabres of Paradise', t: 'Sabresonic', y: 1993, ess: 1 }] },
   { id: 'illbient', tracks: [{ a: 'Varios', t: 'Incursions in Illbient', y: 1996, ess: 1 }] },
-  // 13
+  { sec: 13 },
   { id: 'downtempo', tracks: [
     { a: 'Broadway Project', t: 'Compassion', y: 2001, ess: 1 },
     { a: 'Kruder & Dorfmeister', t: 'The K&D Sessions', y: 1998, ess: 1 },
@@ -263,7 +263,7 @@ LOOPS.add([
     { a: 'Tricky', t: 'Maxinquaye', y: 1995, ess: 1 },
   ] },
   { id: 'cinematic', tracks: [{ a: 'Red Snapper', t: 'Prince Blimey', y: 1996, ess: 1 }] },
-  // 14
+  { sec: 14 },
   { id: 'daisy-age', tracks: [
     { a: 'A Tribe Called Quest', t: 'The Low End Theory', y: 1991, ess: 1 },
     { a: 'De La Soul', t: '3 Feet High and Rising', y: 1989, ess: 1 },
@@ -287,7 +287,7 @@ LOOPS.add([
     { a: 'The Notorious B.I.G.', t: 'Ready to Die', y: 1994, ess: 1 },
     { a: 'Wu-Tang Clan', t: 'Enter the Wu-Tang (36 Chambers)', y: 1993, ess: 1 },
   ] },
-  // 15
+  { sec: 15 },
   { id: 'jungle', tracks: [
     { a: '4 Hero', t: 'Parallel Universe', y: 1994, ess: 1 },
     { a: 'Goldie', t: 'Timeless', y: 1995, ess: 1 },
@@ -313,7 +313,7 @@ LOOPS.add([
     { a: 'Squarepusher', t: 'Feed Me Weird Things', y: 1996, ess: 1 },
   ] },
   { id: '2step', tracks: [{ a: 'So Solid Crew', t: 'They Don’t Know', y: 2001, ess: 1 }] },
-  // 16
+  { sec: 16 },
   { id: 'microsonido', tracks: [
     { a: 'Alva Noto', t: 'Transform', y: 2001, ess: 1 },
     { a: 'Ryoji Ikeda', t: 'Matrix', y: 2001, ess: 1 },
@@ -332,7 +332,7 @@ LOOPS.add([
   ] },
   { id: 'turntablismo-vanguardia', tracks: [{ a: 'Yasunao Tone', t: 'Solo for Wounded CD', y: 1997, ess: 1 }] },
   { id: 'clicks-cuts', tracks: [{ a: 'Varios', t: 'Clicks & Cuts 2', y: 2001, ess: 1 }] },
-  // 17
+  { sec: 17 },
   { id: 'dance-pop', tracks: [
     { a: 'Björk', t: 'Debut', y: 1993, ess: 1 },
     { a: 'One Dove', t: 'Morning Dove White', y: 1993, ess: 1 },
@@ -356,7 +356,7 @@ LOOPS.add([
   { id: 'shibuya-kei', tracks: [{ a: 'Pizzicato Five', t: 'The Sound of Music by Pizzicato Five', y: 1995, ess: 1 }] },
   { id: 'ambient-texturas', tracks: [{ a: 'Seefeel', t: 'Quique', y: 1993, ess: 1 }] },
   { id: 'retrofuturismo', tracks: [{ a: 'Stereolab', t: 'Emperor Tomato Ketchup', y: 1996, ess: 1 }] },
-  // 18
+  { sec: 18 },
   { id: 'hard-techno', tracks: [
     { a: 'Cristian Vogel', t: 'Busca invisibles', y: 1998, ess: 1 },
     { a: 'Dave Clarke', t: 'Archive One', y: 1996, ess: 1 },
@@ -384,7 +384,7 @@ LOOPS.add([
     { a: 'Spooky', t: 'Gargantuan', y: 1993, ess: 1 },
     { a: 'Underworld', t: 'Dubnobasswithmyheadman', y: 1994, ess: 1 },
   ] },
-  // Apéndice 1
+  { sec: 19 },
   { id: 'vanguardia-es', tracks: [
     { a: 'Eduardo Polonio', t: 'Obra antológica 1969-2014', y: 2014, yq: '-', ess: 1 },
     { a: 'It (Música Electrónica Libre)', t: 'Viaje', y: 1976, ess: 1 },
