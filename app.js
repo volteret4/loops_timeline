@@ -171,7 +171,7 @@
     box.innerHTML = '';
     const decades = new Map();
     for (const g of all.filter(matches).sort((a, b) => a.start - b.start)) {
-      const d = Math.floor(g.start / 10) * 10;
+      const d = g.start < 1950 ? 0 : Math.floor(g.start / 10) * 10;
       if (!decades.has(d)) decades.set(d, []);
       decades.get(d).push(g);
     }
