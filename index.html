@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loops: timeline electrónica</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>Loops <span>· una historia de la música electrónica (siglos XX y XXI)</span></h1>
+    <p class="sub">Timeline de géneros, influencias y discos clave, construido capítulo a capítulo a partir de <i>Loops 1</i> (Javier Blánquez y Omar León, eds.) y <i>Loops 2</i> (Javier Blánquez).</p>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<nav class="controls">
+  <input id="q" type="search" placeholder="Buscar género, artista, canción…" autocomplete="off">
+  <div class="views" role="tablist">
+    <button data-view="timeline" class="on">Timeline</button>
+    <button data-view="focus">Individual</button>
+    <button data-view="list">Lista</button>
+  </div>
+  <div class="families" id="families"></div>
+</nav>
+
+<main>
+  <section id="timeline" class="view on">
+    <p class="hint">Pasa el ratón por un género para ver de dónde viene (líneas entrantes) y qué engendra (salientes). Clic para abrir la ficha; clic en una zona vacía para cerrarla.</p>
+    <div class="scroller" id="scroller"><svg id="svg"></svg></div>
+  </section>
+  <section id="focus" class="view">
+    <div class="fbar">
+      <input id="fq" type="search" list="focus-names" placeholder="Elige un género…" autocomplete="off">
+      <datalist id="focus-names"></datalist>
+      <button id="freset" type="button">Reiniciar</button>
+    </div>
+    <p class="hint" id="fhint">Escribe y elige un género: verás de qué géneros viene y a cuáles influye. Pulsa «+» en cualquiera de ellos para desplegar también sus relaciones; clic en un género abre su ficha.</p>
+    <div class="scroller" id="fscroller"><svg id="fsvg"></svg></div>
+  </section>
+  <section id="list" class="view"></section>
+</main>
+
+<aside id="panel" aria-hidden="true">
+  <button class="close" id="close" aria-label="Cerrar">×</button>
+  <div id="detail"></div>
+</aside>
+
+<script src="data/_core.js"></script>
+<!-- capitulos:inicio -->
+<script src="data/00-mapa.js"></script>
+<script src="data/01-pioneros.js"></script>
+<script src="data/02-setenta.js"></script>
+<script src="data/03-dub.js"></script>
+<script src="data/04-kraftwerk.js"></script>
+<script src="data/05-disco.js"></script>
+<script src="data/06-industrial.js"></script>
+<script src="data/07-hiphop-old.js"></script>
+<script src="data/08-synthpop.js"></script>
+<script src="data/09-house.js"></script>
+<script src="data/10-techno.js"></script>
+<script src="data/11-rave.js"></script>
+<script src="data/12-idm.js"></script>
+<script src="data/13-triphop.js"></script>
+<script src="data/14-hiphop-new.js"></script>
+<script src="data/15-jungle.js"></script>
+<script src="data/16-postdigital.js"></script>
+<script src="data/17-pop.js"></script>
+<script src="data/18-house-techno-90s.js"></script>
+<script src="data/19-espana-origenes.js"></script>
+<script src="data/20-espana-bakalao.js"></script>
+<script src="data/21-maquinas.js"></script>
+<script src="data/22-discografia.js"></script>
+<script src="data/23-notas.js"></script>
+<script src="data/30-mapa.js"></script>
+<script src="data/31-prologo.js"></script>
+<script src="data/32-cap01-trance.js"></script>
+<script src="data/33-cap02-electroclash.js"></script>
+<script src="data/34-cap03-minimal.js"></script>
+<script src="data/35-cap04-dubstep.js"></script>
+<script src="data/36-cap05-sur.js"></script>
+<script src="data/37-cap06-detroit.js"></script>
+<script src="data/38-cap07-hauntology.js"></script>
+<script src="data/39-cap08-experimental.js"></script>
+<script src="data/40-cap09-gueto-global.js"></script>
+<script src="data/41-cap10-edm.js"></script>
+<script src="data/42-cap11-bass-deep.js"></script>
+<script src="data/43-cap12-underground.js"></script>
+<script src="data/44-epilogo.js"></script>
+<script src="data/45-discografia-l2.js"></script>
+<!-- capitulos:fin -->
+<script src="data/refs.js"></script>
+<script src="data/yt.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
