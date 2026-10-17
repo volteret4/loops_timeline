@@ -13,6 +13,7 @@ s = re.sub(r'<!-- capitulos:inicio -->.*?<!-- capitulos:fin -->', block, s, flag
 open(p, 'w').write(s)
 PY
 python3 -I tools/refs.py data "$@"
+if [ -f Loops_1_Javier_Blanquez.pdf ] && [ -f Loops_2_Javier_Blanquez.pdf ]; then python3 -I tools/pdfpages.py data/refs.js Loops_1_Javier_Blanquez.pdf Loops_2_Javier_Blanquez.pdf; fi
 python3 -I tools/yt.py data | grep -v "^OK  " || true
 if [ -n "$LASTFM_API_KEY" ]; then python3 -I tools/covers.py; else echo "Sin LASTFM_API_KEY: no se actualizan las portadas"; fi
 for f in data/*.js app.js covers.js; do node --check "$f"; done

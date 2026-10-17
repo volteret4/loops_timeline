@@ -208,6 +208,11 @@
     return `<button class="chip" data-go="${id}"><i style="background:${FAMILIES[g.family].color}"></i>${esc(g.name)}</button>`;
   }
   const REFS = window.LOOPS_REFS || {};
+  // Los dos libros en PDF (generados desde los ePub por tools/pdfpages.py): cada cita enlaza a su página.
+  const PDF = { 1: 'Loops_1_Javier_Blanquez.pdf', 2: 'Loops_2_Javier_Blanquez.pdf' };
+  const pageLink = (loc) => loc.pdf
+    ? `<a class="pg" href="${encodeURI(PDF[loc.book])}#page=${loc.pdf}" target="_blank" rel="noopener" title="Abrir Loops ${loc.book} en PDF por esta página">pág. ${loc.pdf}</a>`
+    : `≈ pág. ${loc.page}`;
   const secName = (s) => s ? s.replace(/^\d+\.\s*/, '').toLowerCase().replace(/^./, (c) => c.toUpperCase()) : 'inicio del capítulo';
   const MAPA = window.LOOPS_MAPA || {};
   function mark(para, q) {
@@ -217,16 +222,16 @@
   }
   function descHtml(g) {
     const defs = MAPA[g.id] || [];
-    if (defs.length) return defs.map((m) => `<div class="desc book"><div class="src">Definición del libro · Loops ${m.book} · Mapa de estilos · ≈ pág. ${m.page}</div>${esc(m.text)}</div>`).join('');
+    if (defs.length) return defs.map((m) => `<div class="desc book"><div class="src">Definición del libro · Loops ${m.book} · Mapa de estilos · ${pageLink(m)}</div>${esc(m.text)}</div>`).join('');
     return `<div class="desc"><div class="src">Resumen a partir del libro</div>${esc(g.desc || '')}</div>`;
   }
   function refsHtml(g) {
     const refs = g.refs.map((r) => ({ ...r, loc: REFS[r.q] })).sort((a, b) => (a.loc ? a.loc.book * 1000 + a.loc.pct : 1e6) - (b.loc ? b.loc.book * 1000 + b.loc.pct : 1e6));
     const others = g.chapters.filter((c) => !g.refs.some((r) => r.ch === c));
     if (!refs.length && !others.length) return '';
-    return `<h4>Pasajes del libro (${refs.length})</h4>${refs.map((r, i) => `<details class="ref"${i < 2 ? ' open' : ''}><summary class="where">${esc(chapterName(r.ch))}${r.loc ? ` · ${esc(secName(r.loc.sec))} · <b>≈ pág. ${r.loc.page}</b> <span>(${r.loc.pct}%)</span>` : ''}</summary><blockquote>${r.loc ? mark(r.loc.para, r.q) : esc(r.q)}</blockquote></details>`).join('')}
+    return `<h4>Pasajes del libro (${refs.length})</h4>${refs.map((r, i) => `<details class="ref"${i < 2 ? ' open' : ''}><summary class="where">${esc(chapterName(r.ch))}${r.loc ? ` · ${esc(secName(r.loc.sec))} · <b>${pageLink(r.loc)}</b>` : ''}</summary><blockquote>${r.loc ? mark(r.loc.para, r.q) : esc(r.q)}</blockquote></details>`).join('')}
       ${others.length ? `<div class="tags">${others.map((c) => `<span>${esc(chapterName(c))}</span>`).join('')}</div>` : ''}
-      <p class="fine">Páginas estimadas sobre el ePub (300 palabras/pág.); el ePub no incluye la paginación impresa.</p>`;
+      <p class="fine">Páginas del PDF generado a partir del ePub (el ePub no incluye la paginación impresa); pulsa una para abrirlo.</p>`;
   }
   const YT = window.LOOPS_YT || {};
   function trackHtml(t, extra = '') {

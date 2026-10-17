@@ -103,6 +103,8 @@ ol.tracks .act a, ol.tracks .act button { display: inline-block; border: 1px sol
 #detail .ref { margin: 8px 0 12px; font-size: 13px; }
 #detail .ref .where { color: var(--muted); }
 #detail .ref .where b { color: var(--ink); }
+#detail .ref .where a.pg, #detail .desc.book .src a.pg { color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; }
+#detail .ref .where a.pg:hover, #detail .desc.book .src a.pg:hover { color: var(--accent); }
 #detail .ref q { display: block; font-style: italic; margin-top: 2px; }
 #detail .fine { font-size: 11px; color: var(--muted); margin-top: 10px; }
 #detail .desc .src { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin-bottom: 4px; }
