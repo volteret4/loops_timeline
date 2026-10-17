@@ -1,28 +1,17 @@
+/* Paleta de esta web (Loops: azul medianoche de club con acento cian). Siempre oscura; los colores de las
+   familias del timeline están en data/core.js y no dependen de ella. */
 :root {
-  --bg: #f6f4ef;
-  --surface: #ffffff;
-  --ink: #1b1a17;
-  --muted: #6b675f;
-  --line: #ddd8cc;
-  --grid: #ebe6db;
-  --accent: #d9480f;
-  --shadow: 0 10px 40px rgba(0,0,0,.12);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e0f12;
-    --surface: #17191e;
-    --ink: #ece9e2;
-    --muted: #9a968d;
-    --line: #2a2d34;
-    --grid: #1c1f25;
-    --accent: #ff8a3d;
-    --shadow: 0 10px 40px rgba(0,0,0,.5);
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0e0f12; --surface: #17191e; --ink: #ece9e2; --muted: #9a968d;
-  --line: #2a2d34; --grid: #1c1f25; --accent: #ff8a3d; --shadow: 0 10px 40px rgba(0,0,0,.5);
+  color-scheme: dark;
+  --bg: #080a14;
+  --surface: #10142a;
+  --ink: #e3e7fb;
+  --muted: #8a92b8;
+  --line: #222a4d;
+  --grid: #141a35;
+  --accent: #3fd8ff;
+  --shadow: 0 10px 40px rgba(0,0,0,.55);
+  --font-title: 'Syne', 'Trebuchet MS', sans-serif;
+  --font-def: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -247,6 +236,14 @@ ol.tracks { padding-left: 20px; margin: 0; }
 #detail .minis .ph b { display: none; }
 #detail .minis .star { width: 15px; height: 15px; font-size: 9px; top: 3px; right: 3px; }
 ol.tracks li[data-cur] > .tt { background: color-mix(in srgb, var(--accent) 18%, transparent); border-radius: 3px; }
+.cv .cnt { position: absolute; top: 6px; left: 6px; font: 600 11px/20px inherit; font-style: normal; color: var(--bg); background: var(--ink); border-radius: 10px; min-width: 20px; padding: 0 6px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+#detail .minis .cnt { top: 3px; left: 3px; font-size: 9px; line-height: 15px; min-width: 15px; padding: 0 4px; }
+#detail .cvitem { margin: 10px 0 16px; }
+#detail .cvitem h3 { margin: 0 0 4px; font-size: 16px; }
+#detail .cvitem h3 .y, #detail .cvitem h3 .k { color: var(--muted); font-weight: 400; font-size: 13px; }
+#detail .cvitem h3 .star { color: var(--accent); }
+#detail .cvitem .gl { margin: 0 0 4px; }
+#detail .cvitem .player { margin-top: 6px; }
 .player.yt { position: relative; display: block; overflow: hidden; border-radius: 6px; background: #000; }
 .player.yt img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
 .player.yt span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
@@ -255,3 +252,13 @@ ol.tracks li[data-cur] > .tt { background: color-mix(in srgb, var(--accent) 18%,
   #covers { padding: 8px 12px 40px; }
   .cgrid { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
 }
+
+/* ---------- Identidad de esta web: tipografía de títulos y definiciones ---------- */
+.top h1, #detail h2, .card h3, #list h2, .discs .dgroup summary b { font-family: var(--font-title); font-weight: 800; letter-spacing: -.01em; }
+.top h1 { font-size: 30px; line-height: 1.05; }
+.top h1 span { font-family: var(--font-def); text-transform: none; letter-spacing: normal; font-size: 15px; }
+#list h2 { font-family: inherit; text-transform: none; letter-spacing: normal; font-weight: 400; }
+#list h2 { text-transform: uppercase; letter-spacing: .08em; }
+.sub, #detail .desc:not(.book), #detail .note, .card p, #detail .lfm { font-family: var(--font-def);  }
+.views button.on { background: var(--accent); color: var(--bg); }
+.progress .bar i { background: var(--accent); }

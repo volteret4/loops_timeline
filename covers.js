@@ -72,47 +72,74 @@ window.Portadas = function (cfg) {
 
   // Un disco o canción por artista y título, con las escenas o géneros donde aparece.
   const rel = new Map();
-  const byArtist = new Map();
   for (const g of all) for (const t of g.tracks) {
     const k = `${t.a}|${t.t}`.toLowerCase();
-    if (!rel.has(k)) {
-      const r = { ...t, key: `${t.a}|${t.t}`, lk: k, genres: [], chs: [...(t.chs || [])] };
-      rel.set(k, r);
-      if (!byArtist.has(t.a)) byArtist.set(t.a, []);
-      byArtist.get(t.a).push(r);
-    }
+    if (!rel.has(k)) rel.set(k, { ...t, key: `${t.a}|${t.t}`, lk: k, genres: [], chs: [...(t.chs || [])] });
     const r = rel.get(k);
     if (!r.genres.includes(g)) r.genres.push(g);
     if (isKey(t)) r.isKey = true;
     for (const c of t.chs || []) if (!r.chs.includes(c)) r.chs.push(c);
   }
-  const cover = (r) => (D.r[r.key] || {}).img || '';
-  const big = (url) => url.replace(/\/i\/u\/\d+x\d+\//, '/i/u/770x0/');
-  const color = (r) => FAMILIES[r.genres[0].family].color;
-  const ph = (r) => `<span class="ph" style="--c:${color(r)}"><b>${esc(r.a)}</b>${esc(r.t)}</span>`;
-
-  const st = { sort: 'y', key: false, img: false };
+  const info = (r) => D.r[r.key] || {};
   const byYear = (a, b) => (a.y || 9999) - (b.y || 9999) || a.a.localeCompare(b.a, 'es') || a.t.localeCompare(b.t, 'es');
   const byName = (a, b) => a.a.localeCompare(b.a, 'es') || (a.y || 9999) - (b.y || 9999);
-  const tile = (r) => `<button class="cv${r.isKey ? ' key' : ''}" data-k="${esc(r.lk)}" title="${esc(r.a)} — ${esc(r.t)}${r.y ? ` (${r.y})` : ''}">${cover(r) ? `<img loading="lazy" src="${esc(cover(r))}" alt="">` : ph(r)}<span class="cap"><b>${esc(r.a)}</b>${esc(r.t)}${r.y ? ` · ${r.y}` : ''}</span>${r.isKey ? '<i class="star">★</i>' : ''}</button>`;
+
+  // Las canciones de un mismo disco (misma portada y artista, o el mismo álbum según Last.fm)
+  // forman un grupo: una sola portada en la rejilla y, en la ficha, un vídeo por canción.
+  const nkey = (s) => s.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
+  const byIdent = new Map(), relGroup = new Map();
+  for (const r of [...rel.values()].sort(byYear)) {
+    const C = info(r);
+    const album = C.kind === 'album' ? r.t : C.album || '';
+    const ids = [C.img && `${r.a}|img|${C.img}`, album && `${r.a}|al|${nkey(album)}`].filter(Boolean);
+    const gr = ids.map((i) => byIdent.get(i)).find(Boolean) || { items: [] };
+    for (const i of ids) if (!byIdent.has(i)) byIdent.set(i, gr);
+    gr.items.push(r);
+    relGroup.set(r.lk, gr);
+  }
+  const groups = new Map();
+  const byArtist = new Map();
+  for (const gr of new Set(relGroup.values())) {
+    // Primero el álbum, si el libro lo cita como tal; luego las canciones por año.
+    gr.items.sort((a, b) => (info(b).kind === 'album') - (info(a).kind === 'album') || byYear(a, b));
+    const head = gr.items[0], H = info(head);
+    Object.assign(gr, {
+      head, id: head.lk, key: head.key, a: head.a,
+      t: gr.items.length > 1 && H.kind !== 'album' && H.album ? H.album : head.t,
+      y: Math.min(...gr.items.map((r) => r.y || 9999)),
+      img: gr.items.map((r) => info(r).img).find(Boolean) || '',
+      isKey: gr.items.some((r) => r.isKey),
+      genres: [...new Set(gr.items.flatMap((r) => r.genres))],
+    });
+    if (gr.y === 9999) gr.y = undefined;
+    groups.set(gr.id, gr);
+    if (!byArtist.has(gr.a)) byArtist.set(gr.a, []);
+    byArtist.get(gr.a).push(gr);
+  }
+  const big = (url) => url.replace(/\/i\/u\/\d+x\d+\//, '/i/u/770x0/');
+  const color = (g) => FAMILIES[g.genres[0].family].color;
+  const ph = (g) => `<span class="ph" style="--c:${color(g)}"><b>${esc(g.a)}</b>${esc(g.t)}</span>`;
+
+  const st = { sort: 'y', key: false, img: false };
+  const tile = (g) => `<button class="cv${g.isKey ? ' key' : ''}" data-k="${esc(g.id)}" title="${esc(g.a)} — ${esc(g.t)}${g.y ? ` (${g.y})` : ''}${g.items.length > 1 ? '\n' + g.items.map((r) => '· ' + r.t).join('\n') : ''}">${g.img ? `<img loading="lazy" src="${esc(g.img)}" alt="">` : ph(g)}<span class="cap"><b>${esc(g.a)}</b>${esc(g.t)}${g.y ? ` · ${g.y}` : ''}</span>${g.isKey ? '<i class="star">★</i>' : ''}${g.items.length > 1 ? `<i class="cnt">${g.items.length}</i>` : ''}</button>`;
 
   function render() {
-    const list = [...rel.values()].filter((r) => (!st.key || r.isKey) && (!st.img || cover(r)) && r.genres.some((g) => matches(g, r)));
+    const list = [...groups.values()].filter((g) => (!st.img || g.img) && g.items.some((r) => (!st.key || r.isKey) && r.genres.some((x) => matches(x, r))));
     list.sort(st.sort === 'y' ? byYear : byName);
-    const n = list.filter(cover).length;
-    let html = `<div class="dbar"><span>${list.length} discos y canciones · ${n} con portada</span>
+    const n = list.reduce((s, g) => s + g.items.length, 0);
+    let html = `<div class="dbar"><span>${list.length} portadas · ${n} discos y canciones</span>
       <label>Orden <select data-sort><option value="y">año</option><option value="a"${st.sort === 'a' ? ' selected' : ''}>artista</option></select></label>
       <label><input type="checkbox" data-key${st.key ? ' checked' : ''}> ${esc(cfg.keyLabel || 'Solo destacados ★')}</label>
       <label><input type="checkbox" data-img${st.img ? ' checked' : ''}> Solo con portada</label></div>`;
     if (!list.length) html += '<p class="hint">Nada coincide con la búsqueda.</p>';
     // Ordenado por año: un bloque por década; por artista: un bloque por inicial.
-    const head = st.sort === 'y' ? (r) => (r.y ? (r.y < 1950 ? 'Antes de 1950' : `Años ${String(Math.floor(r.y / 10) * 10).slice(2)}`) : 'Sin año')
-      : (r) => (r.a.replace(/^(the|los|las|la|el) /i, '')[0] || '#').toUpperCase();
+    const head = st.sort === 'y' ? (g) => (g.y ? (g.y < 1950 ? 'Antes de 1950' : `Años ${String(Math.floor(g.y / 10) * 10).slice(2)}`) : 'Sin año')
+      : (g) => (g.a.replace(/^(the|los|las|la|el) /i, '')[0] || '#').toUpperCase();
     let cur = null;
-    for (const r of list) {
-      const h = head(r);
+    for (const g of list) {
+      const h = head(g);
       if (h !== cur) { html += `${cur === null ? '' : '</div>'}<h2>${esc(h)}</h2><div class="cgrid">`; cur = h; }
-      html += tile(r);
+      html += tile(g);
     }
     box.innerHTML = html + (cur === null ? '' : '</div>');
   }
@@ -130,8 +157,8 @@ window.Portadas = function (cfg) {
   document.addEventListener('error', (e) => {
     const img = e.target;
     if (img.tagName !== 'IMG' || !img.closest('.cv, .cvpics')) return;
-    const r = rel.get(img.closest('[data-k]')?.dataset.k);
-    if (r) img.outerHTML = ph(r); else img.remove();
+    const g = groups.get(img.closest('[data-k]')?.dataset.k);
+    if (g) img.outerHTML = ph(g); else img.remove();
   }, true);
 
   function lfmText(x, what) {
@@ -145,35 +172,46 @@ window.Portadas = function (cfg) {
   const video = (v) => location.protocol === 'file:'
     ? `<a class="player yt" href="https://www.youtube.com/watch?v=${esc(v.id)}" target="_blank" rel="noopener" title="${esc(v.title)}"><img src="https://i.ytimg.com/vi/${esc(v.id)}/hqdefault.jpg" alt=""><span>▶</span></a>`
     : `<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v.id)}" title="${esc(v.title)}" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe></div>`;
+  const videoOr = (r) => YT[r.key] ? video(YT[r.key])
+    : `<p class="fine"><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(r.a + ' ' + r.t)}" target="_blank" rel="noopener">Buscar en YouTube 🔍</a></p>`;
   const num = (n) => n ? n.toLocaleString('es-ES') : '';
   const tagsHtml = (x) => (x && x.tags && x.tags.length) ? `<div class="tags">${x.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>` : '';
+  const chips = (gs, cls) => gs.map((g) => `<button class="${cls}" data-go="${g.id}"><i class="${cls === 'chip' ? '' : 'dot'}" style="background:${FAMILIES[g.family].color}"></i>${esc(g.name)}</button>`).join('');
+  const kindOf = (r) => { const C = info(r); return C.kind === 'album' ? 'álbum' : C.kind === 'track' ? 'canción' : ''; };
 
-  function openCover(lk) {
-    const r = rel.get(lk);
-    if (!r) return;
-    const C = D.r[r.key] || {}, A = D.a[r.a] || {};
-    const v = YT[r.key];
-    const kind = C.kind === 'album' ? 'Álbum' : C.kind === 'track' ? 'Canción' + (C.album ? ` · del disco «${esc(C.album)}»` : '') : '';
-    const mine = (byArtist.get(r.a) || []).slice().sort(byYear);
-    const others = mine.filter((o) => o !== r);
+  function openCover(id) {
+    const g = groups.get(id);
+    if (!g) return;
+    const C = info(g.head), A = D.a[g.a] || {};
+    const multi = g.items.length > 1;
+    const kind = !multi ? (C.kind === 'album' ? 'Álbum' : C.kind === 'track' ? 'Canción' + (C.album ? ` · del disco «${esc(C.album)}»` : '') : '')
+      : C.kind === 'album' ? `Álbum y ${g.items.length - 1} ${g.items.length > 2 ? 'canciones' : 'canción'} citadas` : `${g.items.length} canciones del disco`;
+    const mine = (byArtist.get(g.a) || []).slice().sort(byYear);
+    const cited = mine.flatMap((o) => o.items);
+    // Un bloque por título del grupo: su nombre, dónde lo cita el libro y su vídeo. Si todos
+    // salen en las mismas escenas y capítulos, eso se dice una sola vez, arriba.
+    const place = (r) => r.genres.map((x) => x.id).join() + '|' + where(r);
+    const same = g.items.every((r) => place(r) === place(g.head));
+    const item = (r) => `<div class="cvitem">${multi ? `<h3>${r.isKey ? '<span class="star">★</span> ' : ''}${esc(r.t)}${r.y ? ` <span class="y">(${r.y})</span>` : ''}${kindOf(r) ? ` <span class="k">${kindOf(r)}</span>` : ''}</h3>` : ''}
+      ${!same ? `<div class="gl">${chips(r.genres, 'glink')}</div>` : ''}
+      ${!same && where(r) ? `<div class="fine">En el libro: ${where(r)}</div>` : ''}${videoOr(r)}</div>`;
     $('#detail').innerHTML = `
-      <div class="cvpics" data-k="${esc(r.lk)}">
-        <figure>${cover(r) ? `<img src="${esc(big(cover(r)))}" alt="Portada">` : ph(r)}<figcaption>Portada${C.src === 'deezer' ? ' · Deezer' : C.src ? ' · Last.fm' : ''}</figcaption></figure>
-        ${A.img ? `<figure class="art"><img src="${esc(A.img)}" alt="${esc(r.a)}"><figcaption>${esc(r.a)} · ${A.isrc === 'commons' ? 'Wikimedia Commons' : 'Deezer'}</figcaption></figure>` : ''}
+      <div class="cvpics" data-k="${esc(g.id)}">
+        <figure>${g.img ? `<img src="${esc(big(g.img))}" alt="Portada">` : ph(g)}<figcaption>Portada${C.src === 'deezer' ? ' · Deezer' : g.img ? ' · Last.fm' : ''}</figcaption></figure>
+        ${A.img ? `<figure class="art"><img src="${esc(A.img)}" alt="${esc(g.a)}"><figcaption>${esc(g.a)} · ${A.isrc === 'commons' ? 'Wikimedia Commons' : 'Deezer'}</figcaption></figure>` : ''}
       </div>
-      <h2>${esc(r.t)}</h2>
-      <div class="aka"><b>${esc(r.a)}</b>${r.y ? ` · ${r.y}` : ''}${kind ? ` · ${kind}` : ''}${r.isKey ? ` · <span class="star">★</span> ${esc(cfg.keyName || 'destacado')}` : ''}</div>
-      <div class="links cvg">${r.genres.map((g) => `<button class="chip" data-go="${g.id}"><i style="background:${FAMILIES[g.family].color}"></i>${esc(g.name)}</button>`).join('')}</div>
-      ${where(r) ? `<div class="fine">En el libro: ${where(r)}</div>` : ''}
-      ${v ? video(v)
-        : `<p class="fine"><a href="https://www.youtube.com/results?search_query=${encodeURIComponent(r.a + ' ' + r.t)}" target="_blank" rel="noopener">Buscar en YouTube 🔍</a></p>`}
-      ${C.wiki || C.tags ? `<h4>${C.kind === 'track' ? 'La canción' : 'El disco'}${C.lis ? ` · ${num(C.lis)} oyentes en Last.fm` : ''}</h4>${tagsHtml(C)}${lfmText(C, C.kind === 'track' ? 'La canción' : 'El disco')}` : ''}
-      <h4>${esc(r.a)}${A.lis ? ` · ${num(A.lis)} oyentes en Last.fm` : ''}</h4>
+      <h2>${esc(g.t)}</h2>
+      <div class="aka"><b>${esc(g.a)}</b>${g.y ? ` · ${g.y}` : ''}${kind ? ` · ${kind}` : ''}${!multi && g.isKey ? ` · <span class="star">★</span> ${esc(cfg.keyName || 'destacado')}` : ''}</div>
+      <div class="links cvg">${chips(g.genres, 'chip')}</div>
+      ${same && where(g.head) ? `<div class="fine">En el libro: ${where(g.head)}</div>` : ''}
+      ${multi ? `<h4>En el libro (${g.items.length})</h4>` : ''}${g.items.map(item).join('')}
+      ${C.wiki || C.tags ? `<h4>${C.kind === 'track' ? 'La canción' : 'El disco'}${multi && C.kind === 'track' ? ` «${esc(g.head.t)}»` : ''}${C.lis ? ` · ${num(C.lis)} oyentes en Last.fm` : ''}</h4>${tagsHtml(C)}${lfmText(C, C.kind === 'track' ? 'La canción' : 'El disco')}` : ''}
+      <h4>${esc(g.a)}${A.lis ? ` · ${num(A.lis)} oyentes en Last.fm` : ''}</h4>
       ${services(A) ? `<div class="svcs">${services(A)}</div>` : ''}
       ${tagsHtml(A)}${lfmText(A, 'El artista')}
-      <h4>Lo que cita el libro de ${esc(r.a)} (${mine.length})</h4>
-      ${others.length ? `<div class="minis">${others.map(tile).join('')}</div>` : ''}
-      <ol class="tracks">${mine.map((o) => trackHtml(o, `<span class="gl">${o.genres.map((g) => `<button class="glink" data-go="${g.id}"><i class="dot" style="background:${FAMILIES[g.family].color}"></i>${esc(g.name)}</button>`).join('')}</span>`).replace('<li', o === r ? '<li data-cur' : '<li')).join('')}</ol>
+      ${mine.length > 1 ? `<h4>Otras portadas de ${esc(g.a)} (${mine.length - 1})</h4><div class="minis">${mine.filter((o) => o !== g).map(tile).join('')}</div>` : ''}
+      ${cited.length > 1 ? `<h4>Todo lo que cita el libro de ${esc(g.a)} (${cited.length})</h4>
+      <ol class="tracks">${cited.map((o) => trackHtml(o, `<span class="gl">${chips(o.genres, 'glink')}</span>`).replace('<li', g.items.includes(o) ? '<li data-cur' : '<li')).join('')}</ol>` : ''}
       <p class="fine">Portadas y textos de Last.fm (CC BY-SA) y Deezer; fotos de Wikimedia Commons o Deezer; enlaces de Wikidata. Vídeos de YouTube.</p>`;
     const det = $('#detail');
     det.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => open(b.dataset.go));
@@ -182,14 +220,15 @@ window.Portadas = function (cfg) {
     $('#panel').classList.add('open');
     $('#panel').setAttribute('aria-hidden', 'false');
     $('#panel').scrollTop = 0;
-    history.replaceState(null, '', '#portada=' + encodeURIComponent(r.key));
+    history.replaceState(null, '', '#portada=' + encodeURIComponent(g.key));
   }
 
   render();
   const h = decodeURIComponent(location.hash.slice(1));
-  if (h.startsWith('portada=') && rel.has(h.slice(8).toLowerCase())) {
+  const fromHash = h.startsWith('portada=') && relGroup.get(h.slice(8).toLowerCase());
+  if (fromHash) {
     document.querySelector('.views button[data-view="covers"]').click();
-    openCover(h.slice(8).toLowerCase());
+    openCover(fromHash.id);
   }
   return { render };
 };
