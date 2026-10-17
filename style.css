@@ -27,6 +27,8 @@ a { color: var(--accent); }
 .top h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; }
 .top h1 span { font-weight: 400; color: var(--muted); font-size: 18px; }
 .sub { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.brand .home { display: inline-block; margin-bottom: 2px; font-size: 12px; color: var(--muted); text-decoration: none; }
+.brand .home:hover { color: var(--accent); }
 .progress { font-size: 13px; color: var(--muted); text-align: right; }
 .progress .bar { width: 220px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 6px; margin-left: auto; }
 .progress .bar i { display: block; height: 100%; background: var(--accent); }
@@ -267,3 +269,26 @@ ol.tracks li[data-cur] > .tt { background: color-mix(in srgb, var(--accent) 18%,
 .sub, #detail .desc:not(.book), #detail .note, .card p, #detail .lfm { font-family: var(--font-def);  }
 .views button.on { background: var(--accent); color: var(--bg); }
 .progress .bar i { background: var(--accent); }
+
+/* ---------- Menciones (menciones.js) ---------- */
+#mentions { padding: 12px 24px 24px; }
+#mentions .mhead select { max-width: 60vw; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+.mlegend { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.mlg { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 12px; cursor: pointer; }
+.mlg i { width: 10px; height: 10px; border-radius: 2px; }
+.mlg span { color: var(--muted); }
+.mlg.on { border-color: var(--accent); }
+.mscroll { overflow: auto; max-height: calc(100vh - 230px); border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.mgrid { position: relative; padding-bottom: 8px; }
+.maxis { position: sticky; top: 0; z-index: 2; clip-path: inset(0 0 0 var(--sl, 0px)); height: 24px; margin-left: var(--label); background: var(--bg); border-bottom: 1px solid var(--line); }
+.maxis span { position: absolute; top: 4px; font-size: 11px; color: var(--muted); transform: translateX(-50%); }
+.mrow { display: flex; height: 26px; align-items: center; cursor: pointer; }
+.mrow:hover, .mrow.on { background: var(--surface); }
+.mname { position: sticky; left: 0; z-index: 3; flex: 0 0 var(--label); width: var(--label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; background: inherit; background-color: var(--bg); border: 0; border-right: 1px solid var(--line); color: var(--ink); font: 13px/26px inherit; padding: 0 8px; cursor: pointer; }
+.mrow.on .mname { color: var(--accent); font-weight: 600; }
+.mname span { color: var(--muted); font-size: 11px; }
+.mbar { position: relative; z-index: 0; height: 18px; clip-path: inset(-2px -2px -2px var(--sl, 0px)); }
+.mseg { position: absolute; top: 0; height: 18px; border-radius: 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #111; font-size: 11px; line-height: 18px; padding: 0 4px; box-sizing: border-box; }
+.mseg.key { box-shadow: inset 0 0 0 2px #fff8; }
+#detail .mref blockquote mark { background: color-mix(in srgb, var(--accent) 35%, transparent); color: inherit; }
+#detail .more { margin: 6px 0; padding: 4px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--accent); cursor: pointer; }
