@@ -230,5 +230,6 @@ window.Portadas = function (cfg) {
     document.querySelector('.views button[data-view="covers"]').click();
     openCover(fromHash.id);
   }
-  return { render };
+  // La pestaña Menciones (menciones.js) reutiliza los discos ya agrupados.
+  return { render, groups, byArtist };
 };
