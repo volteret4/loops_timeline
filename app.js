@@ -468,9 +468,15 @@
   }
   window.addEventListener('resize', fitScrollers);
   document.querySelectorAll('.views button').forEach((b) => b.addEventListener('click', fitScrollers));
+  // Pestaña «Portadas» (covers.js, común a todas las webs de Music_Books).
+  const portadas = Portadas({
+    all, FAMILIES, esc, trackHtml, togglePlayer, open, YT, data: window.LOOPS_COVERS,
+    matches: trackMatches, isKey: (t) => t.ess, keyLabel: 'Solo esenciales ★', keyName: 'esencial',
+    where: (r) => r.chs.slice().sort((a, b) => a - b).map((c) => esc(chapterName(c))).join(' · '),
+  });
   function render() {
     $('#ftoggle').classList.toggle('active', !!state.q || state.off.size > 0);
-    renderTimeline(); renderList(); renderDiscs('discs', false); renderDiscs('ess', true); renderByChapter(); stickMain(); fitScrollers(); }
+    renderTimeline(); renderList(); renderDiscs('discs', false); renderDiscs('ess', true); renderByChapter(); portadas.render(); stickMain(); fitScrollers(); }
   render();
   const hash = location.hash.slice(1);
   if (hash.startsWith('focus=') && byId.has(hash.slice(6))) showFocus(hash.slice(6));

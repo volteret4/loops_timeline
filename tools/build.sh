@@ -1,5 +1,5 @@
 #!/bin/sh
-# Enlaza data/NN-*.js en index.html y regenera data/refs.js.
+# Enlaza data/NN-*.js en index.html, regenera data/refs.js y busca vídeos y portadas nuevos.
 # Uso: tools/build.sh <dir_txt_loops1> <spine_loops1> [<dir_txt_loops2> <spine_loops2>]
 set -e
 cd "$(dirname "$0")/.."
@@ -14,4 +14,5 @@ open(p, 'w').write(s)
 PY
 python3 -I tools/refs.py data "$@"
 python3 -I tools/yt.py data | grep -v "^OK  " || true
-for f in data/*.js app.js; do node --check "$f"; done
+if [ -n "$LASTFM_API_KEY" ]; then python3 -I tools/covers.py; else echo "Sin LASTFM_API_KEY: no se actualizan las portadas"; fi
+for f in data/*.js app.js covers.js; do node --check "$f"; done
