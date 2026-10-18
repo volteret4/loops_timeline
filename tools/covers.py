@@ -310,7 +310,7 @@ def main(*flags):
         sys.exit('Falta la variable de entorno LASTFM_API_KEY')
     dump = json.loads(subprocess.run(['node', '-e', DUMP], capture_output=True, text=True, check=True).stdout)
     ns, tracks = dump['ns'], dump['tracks']
-    con = sqlite3.connect(DB, check_same_thread=False)
+    con = sqlite3.connect(DB, check_same_thread=False, timeout=300)   # otro libro puede estar escribiendo a la vez
     R, A = Store(con, 'release'), Store(con, 'artist')
     lock = threading.Lock()
 
