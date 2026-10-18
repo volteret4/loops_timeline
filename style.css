@@ -298,13 +298,17 @@ ol.tracks li[data-cur] > .tt { background: color-mix(in srgb, var(--accent) 18%,
 #detail .mref blockquote mark { background: color-mix(in srgb, var(--accent) 35%, transparent); color: inherit; }
 #detail .more { margin: 6px 0; padding: 4px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--accent); cursor: pointer; }
 .mpicks { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
-.mpick { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 13px; cursor: grab; user-select: none; }
+.mpick { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 13px; }
 .mpick i { width: 10px; height: 10px; border-radius: 2px; margin-right: 2px; }
 .mpick button { border: 0; background: none; color: var(--muted); font-size: 12px; padding: 0 4px; cursor: pointer; }
-.mpick button:hover:not(:disabled) { color: var(--accent); }
-.mpick button:disabled { opacity: .3; cursor: default; }
-.mpick.drag { opacity: .4; }
-.mpick.over { box-shadow: -3px 0 0 var(--accent); }
+.mpick button:hover { color: var(--accent); }
+.mblock { position: relative; background: var(--bg); }
+.mblock.drag { z-index: 5; opacity: .85; box-shadow: 0 6px 24px #000a; }
+.mblock.over-top { box-shadow: inset 0 3px 0 var(--accent); }
+.mblock.over-bottom { box-shadow: inset 0 -3px 0 var(--accent); }
+.mgrab { display: inline-block; margin-right: 8px; color: var(--muted); font-weight: 400; cursor: grab; touch-action: none; user-select: none; }
+.mgrab:hover { color: var(--accent); }
+.mblock.drag .mgrab { cursor: grabbing; }
 .msec { height: 30px; display: flex; align-items: flex-end; border-top: 1px solid var(--line); margin-top: 6px; }
 .msec span { position: sticky; left: 0; z-index: 3; padding: 0 10px; border-left: 4px solid; background: var(--bg); color: var(--ink); font-weight: 600; font-size: 13px; line-height: 22px; white-space: nowrap; }
 .msec small { color: var(--muted); font-weight: 400; margin-left: 6px; }

@@ -101,9 +101,8 @@ window.Menciones = function (cfg) {
       const list = genres.filter((g) => g.family === f && !GS.includes(g));
       return list.length ? `<optgroup label="${esc(F.name)}">${list.map((g) => `<option value="${esc(g.id)}">${esc(g.name)} (${artistsOf.get(g).size})</option>`).join('')}</optgroup>` : '';
     }).join('');
-    // Los elegidos, como fichas que se arrastran (o se mueven con las flechas) para reordenarlos.
-    const picked = GS.map((G, i) => `<span class="mpick" draggable="true" data-i="${i}" title="Arrastra para reordenar"><i style="background:${colors.get(G)}"></i>${esc(G.name)}
-        <button data-mv="-1" title="Subir"${i ? '' : ' disabled'}>↑</button><button data-mv="1" title="Bajar"${i < GS.length - 1 ? '' : ' disabled'}>↓</button><button data-rm title="Quitar">✕</button></span>`).join('');
+    // Los elegidos, como fichas que se quitan con ✕ (se reordenan arrastrando su cabecera en el timeline).
+    const picked = GS.map((G, i) => `<span class="mpick" data-i="${i}"><i style="background:${colors.get(G)}"></i>${esc(G.name)}<button data-rm title="Quitar">✕</button></span>`).join('');
     const legend = [...colors].filter(([g]) => count.get(g)).map(([g, c]) => `<button class="mlg${GS.includes(g) ? ' on' : ''}" data-g="${esc(g.id)}" title="${GS.includes(g) ? esc(g.name) : 'Añadir ' + esc(g.name)}"><i style="background:${c}"></i>${esc(g.name)} <span>${count.get(g) || 0}</span></button>`).join('')
       + (other ? `<span class="mlg out" title="Álbumes del artista según MusicBrainz que el libro no cita"><i></i>No citados en el libro <span>${other}</span></span>` : '');
     let axis = '';
@@ -128,10 +127,11 @@ window.Menciones = function (cfg) {
       const n = M && M[a] ? M[a].length : null;
       return `<div class="mrow${a === st.artist ? ' on' : ''}" data-a="${esc(a)}"><button class="mname" title="${esc(a)}">${esc(a)}${n ? ` <span>${n}</span>` : ''}</button><div class="mbar" style="width:${W}px">${segs}</div></div>`;
     }).join('');
-    // Con varios géneros, cada timeline lleva una cabecera con su nombre, fija a la izquierda.
-    const rows = sections.map(({ G, artists }) => (GS.length > 1
-      ? `<div class="msec"><span style="border-color:${colors.get(G)}">${esc(G.name)} <small>${artists.length} ${artists.length === 1 ? 'artista' : 'artistas'}</small></span></div>` : '')
-      + rowsOf(G, artists)).join('');
+    // Con varios géneros, cada timeline va en un bloque con una cabecera fija a la izquierda, cuya
+    // asa (⠿) se arrastra arriba o abajo para cambiar el orden.
+    const rows = GS.length > 1 ? sections.map(({ G, artists }, i) => `<div class="mblock" data-i="${i}">
+        <div class="msec"><span style="border-color:${colors.get(G)}"><b class="mgrab" title="Arrastra para reordenar">⠿</b>${esc(G.name)} <small>${artists.length} ${artists.length === 1 ? 'artista' : 'artistas'}</small></span></div>
+        ${rowsOf(G, artists)}</div>`).join('') : sections.map(({ G, artists }) => rowsOf(G, artists)).join('');
     const nArtists = new Set(sections.flatMap((s) => s.artists.map((o) => o.a))).size;
     box.innerHTML = `<div class="dbar mhead"><label>Géneros o escenas <select data-mg>${opts}</select></label>
         <span>${nArtists} artistas · ${cited} discos citados${other ? ` · ${other} álbumes no citados` : ''} · ${Y0}–${Y1 - 1}</span></div>
@@ -139,7 +139,7 @@ window.Menciones = function (cfg) {
       <div class="mlegend">${legend}</div>
       <div class="mscroll"><div class="mgrid" style="width:${LABEL + W}px;--label:${LABEL}px">
         <div class="maxis" style="width:${W}px">${axis}</div>${rows}</div></div>
-      <p class="fine">Cada fila es un artista, con sus discos en el año en que salieron: en color, los que cita el libro (las canciones de un mismo disco forman un tramo), del color del género en que los cita; con borde, el resto de sus álbumes de estudio según MusicBrainz. Pulsa un artista para ver los pasajes que lo nombran. Se pueden añadir varios géneros (también pulsando su color en la leyenda): cada uno tiene su timeline, en el orden de las fichas, que se arrastran o se mueven con las flechas.</p>`;
+      <p class="fine">Cada fila es un artista, con sus discos en el año en que salieron: en color, los que cita el libro (las canciones de un mismo disco forman un tramo), del color del género en que los cita; con borde, el resto de sus álbumes de estudio según MusicBrainz. Pulsa un artista para ver los pasajes que lo nombran. Se pueden añadir varios géneros (también pulsando su color en la leyenda): cada uno tiene su timeline, que se reordena arrastrando el asa ⠿ de su título.</p>`;
     // Arrancar en los años del primer género elegido.
     // Las barras se recortan por la izquierda lo que se haya desplazado el timeline, para que no
     // asomen bajo la columna fija de nombres.
@@ -171,9 +171,7 @@ window.Menciones = function (cfg) {
   box.addEventListener('click', (e) => {
     const pk = e.target.closest('.mpick');
     if (pk) {
-      const i = +pk.dataset.i, b = e.target.closest('button');
-      if (b && b.hasAttribute('data-rm')) { st.gs.splice(i, 1); update(); }
-      else if (b && b.dataset.mv) move(i, i + +b.dataset.mv);
+      if (e.target.closest('[data-rm]')) { st.gs.splice(+pk.dataset.i, 1); update(); }
       return;
     }
     const lg = e.target.closest('.mlg');
@@ -182,38 +180,55 @@ window.Menciones = function (cfg) {
       if (g && !st.gs.includes(g)) { st.gs.push(g); update(); }
       return;
     }
+    if (e.target.closest('.msec')) return;
     const row = e.target.closest('.mrow');
     if (row) openArtist(row.dataset.a);
   });
-  // Arrastrar una ficha sobre otra la coloca en su sitio.
-  let dragI = null;
-  box.addEventListener('dragstart', (e) => {
-    const pk = e.target.closest('.mpick');
-    if (!pk) return;
-    dragI = +pk.dataset.i;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', pk.dataset.i);
-    pk.classList.add('drag');
-  });
-  box.addEventListener('dragover', (e) => {
-    const pk = e.target.closest('.mpick');
-    if (dragI == null || !pk) return;
+  // Arrastrar el asa de un bloque lo mueve con el puntero (ratón o dedo); al soltarlo, se coloca
+  // entre los bloques según la altura. Cerca de los bordes, el timeline se desplaza solo.
+  let drag = null;
+  box.addEventListener('pointerdown', (e) => {
+    const h = e.target.closest('.mgrab');
+    if (!h || e.button > 0) return;
     e.preventDefault();
-    box.querySelectorAll('.mpick.over').forEach((p) => p !== pk && p.classList.remove('over'));
-    pk.classList.add('over');
+    const blk = h.closest('.mblock');
+    const sc = box.querySelector('.mscroll');
+    drag = { i: +blk.dataset.i, blk, sc, y0: e.clientY, s0: sc.scrollTop, j: +blk.dataset.i, py: e.clientY };
+    blk.classList.add('drag');
+    h.setPointerCapture(e.pointerId);
+    const tick = () => {
+      if (!drag) return;
+      const r = drag.sc.getBoundingClientRect();
+      const v = drag.py < r.top + 40 ? -12 : drag.py > r.bottom - 40 ? 12 : 0;
+      if (v) { drag.sc.scrollTop += v; place(); }
+      drag.raf = requestAnimationFrame(tick);
+    };
+    drag.raf = requestAnimationFrame(tick);
   });
-  box.addEventListener('drop', (e) => {
-    const pk = e.target.closest('.mpick');
-    if (dragI == null || !pk) return;
-    e.preventDefault();
-    const i = dragI;
-    dragI = null;
-    move(i, +pk.dataset.i);
+  function place() {
+    const { blk, sc, y0, s0, py } = drag;
+    blk.style.transform = `translateY(${py - y0 + sc.scrollTop - s0}px)`;
+    const others = [...box.querySelectorAll('.mblock')].filter((b) => b !== blk);
+    let j = 0;
+    for (const b of others) { const r = b.getBoundingClientRect(); if (py > r.top + r.height / 2) j++; }
+    drag.j = j;
+    others.forEach((b, k) => { b.classList.toggle('over-top', k === j); b.classList.toggle('over-bottom', j === others.length && k === others.length - 1); });
+  }
+  box.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    drag.py = e.clientY;
+    place();
   });
-  box.addEventListener('dragend', () => {
-    dragI = null;
-    box.querySelectorAll('.mpick.drag, .mpick.over').forEach((p) => p.classList.remove('drag', 'over'));
-  });
+  const drop = () => {
+    if (!drag) return;
+    cancelAnimationFrame(drag.raf);
+    const { i, j } = drag;
+    drag = null;
+    if (i !== j) move(i, j);
+    else render();
+  };
+  box.addEventListener('pointerup', drop);
+  box.addEventListener('pointercancel', drop);
 
   // Nombres que se resaltan en los pasajes: el completo (sin «and His Orchestra»…) y el apellido.
   function marks(a) {
