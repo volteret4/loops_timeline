@@ -276,12 +276,21 @@
   const dot = (g) => `<i class="dot" style="background:${FAMILIES[g.family].color}"></i>`;
   const genreLink = (g) => `<button class="glink" data-go="${g.id}">${dot(g)}${esc(g.name)}</button>`;
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  // Listas de reproducción anónimas de YouTube (sin cuenta ni cuota) con los vídeos de un grupo, de 50
+  // en 50, el máximo que admite cada una: un capítulo largo lleva varias partes.
+  function playlistLinks(tracks) {
+    const ids = [...new Set(tracks.map((t) => YT[`${t.a}|${t.t}`]?.id).filter(Boolean))];
+    if (ids.length < 2) return '';
+    const parts = [];
+    for (let i = 0; i < ids.length; i += 50) parts.push(ids.slice(i, i + 50));
+    return `<div class="gtools">${parts.map((p, i) => `<a class="plist" href="https://www.youtube.com/watch_videos?video_ids=${p.join(',')}" target="_blank" rel="noopener" title="Abrir en YouTube una lista con ${p.length} vídeos">▶ ${parts.length > 1 ? `parte ${i + 1} (${p.length})` : `lista (${p.length})`}</a>`).join('')}</div>`;
+  }
 
   function discGroups(box, groups, unit, tools = '') {
     const n = groups.reduce((s, gr) => s + gr.tracks.length, 0);
     const openAll = groups.length <= 12 || state.ess;
     box.innerHTML = `<div class="dbar"><span>${plural(n, 'disco', 'discos')} · ${plural(groups.length, unit[0], unit[1])}</span>${tools}<button data-fold="1">Desplegar todo</button><button data-fold="0">Plegar todo</button></div>`
-      + (groups.length ? groups.map((gr) => `<details class="dgroup"${openAll ? ' open' : ''}><summary>${gr.head}<span class="n">${gr.tracks.length}</span></summary><ol class="tracks">${gr.tracks.map(gr.row).join('')}</ol></details>`).join('')
+      + (groups.length ? groups.map((gr) => `<details class="dgroup"${openAll ? ' open' : ''}><summary>${gr.head}<span class="n">${gr.tracks.length}</span></summary>${playlistLinks(gr.tracks)}<ol class="tracks">${gr.tracks.map(gr.row).join('')}</ol></details>`).join('')
         : '<p class="hint">Nada coincide con la búsqueda.</p>');
   }
   // Una sola vista de discos, agrupada por escena o por capítulo (para escuchar mientras se lee),
