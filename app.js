@@ -84,11 +84,12 @@
     const svg = $('#svg');
     svg.innerHTML = '';
     pos.clear();
-    const W = x(Y1) + 40;
+    const W = Math.max(x(Y1), x(menciones.lastYear())) + 40;
     const axis = el('g', { class: 'axis' }, svg);
     const lanes = el('g', {}, svg);
     const links = el('g', { class: 'links' }, svg);
     const bars = el('g', {}, svg);
+    const arts = el('g', { class: 'arts' }, svg);
     const tags = el('g', { class: 'lane-tags' }, svg);
     const yearTags = el('g', { class: 'year-tags' }, svg);
 
@@ -96,23 +97,28 @@
     for (const [fid, fam] of Object.entries(FAMILIES)) {
       const items = all.filter((g) => g.family === fid && matches(g)).sort((a, b) => a.start - b.start);
       if (!items.length) continue;
+      // Un género con sus artistas desplegados (menciones.js) ocupa una fila para él solo, más alta.
       const rows = [];
       for (const g of items) {
         const tw = g.name.length * 6.6 + 10;
         const fits = tw < x(endOf(g)) - x(g.start);
         const reach = x(endOf(g)) + (fits ? 0 : tw) + 8;
-        let r = rows.findIndex((end) => end < x(g.start));
-        if (r < 0) { r = rows.length; rows.push(0); }
-        rows[r] = reach;
+        const extra = menciones.height(g);
+        let r = extra ? -1 : rows.findIndex((row) => !row.solo && row.end < x(g.start));
+        if (r < 0) { r = rows.length; rows.push({ solo: extra > 0, h: ROW + extra }); }
+        rows[r].end = reach;
         g._row = r;
       }
-      const h = LANE_PAD + rows.length * ROW + 8;
+      const rowY = [];
+      let h = LANE_PAD;
+      for (const row of rows) { rowY.push(h - LANE_PAD); h += row.h; }
+      h += 8;
       el('rect', { class: 'lane-bg', x: 0, y, width: W, height: h }, lanes);
       el('rect', { x: 0, y, width: 4, height: h, fill: fam.color }, lanes);
       const lbl = el('text', { class: 'lane-label', x: 12, y: y + 16 }, tags);
       lbl.textContent = fam.name;
       for (const g of items) {
-        const gy = y + LANE_PAD + g._row * ROW;
+        const gy = y + LANE_PAD + rowY[g._row];
         const gx = x(g.start), gw = Math.max(6, x(endOf(g)) - gx);
         pos.set(g.id, { x: gx, w: gw, y: gy + BAR_H / 2 });
         const node = el('g', { class: 'g', 'data-id': g.id }, bars);
@@ -126,6 +132,7 @@
         node.addEventListener('mouseenter', () => highlight(g.id, links, bars));
         node.addEventListener('mouseleave', () => highlight(null, links, bars));
         node.addEventListener('click', (e) => { e.stopPropagation(); open(g.id); });
+        if (rows[g._row].solo) menciones.draw(g, arts, gy + ROW, x);
       }
       y += h + 6;
     }
@@ -178,33 +185,6 @@
     for (const c of children.get(id)) if (pos.has(c)) el('path', { d: curve(me, pos.get(c)), stroke: FAMILIES[g.family].color }, links);
   }
 
-  // ---------- Lista ----------
-  function renderList() {
-    const box = $('#list');
-    box.innerHTML = '';
-    const decades = new Map();
-    for (const g of all.filter(matches).sort((a, b) => a.start - b.start)) {
-      const d = g.start < 1950 ? 0 : Math.floor(g.start / 10) * 10;
-      if (!decades.has(d)) decades.set(d, []);
-      decades.get(d).push(g);
-    }
-    for (const [d, items] of decades) {
-      box.insertAdjacentHTML('beforeend', `<h2>${d < 1950 ? 'Antes de 1950' : 'Años ' + String(d).slice(2)}</h2>`);
-      const grid = document.createElement('div');
-      grid.className = 'cards';
-      for (const g of items) {
-        const c = document.createElement('div');
-        c.className = 'card';
-        c.style.borderLeftColor = FAMILIES[g.family].color;
-        c.innerHTML = `<h3>${esc(g.name)}</h3><div class="meta">${g.start}–${g.end ?? '…'}${g.place ? ' · ' + esc(g.place) : ''} · ${g.tracks.length} discos</div><p>${esc(g.desc || '')}</p>`;
-        c.onclick = () => open(g.id);
-        grid.appendChild(c);
-      }
-      box.appendChild(grid);
-    }
-    // Cuando se filtra desde la lista y se vuelve a timeline, mantener coherencia
-    if (!decades.size) box.innerHTML = '<p class="hint">Nada coincide con la búsqueda.</p>';
-  }
 
   // ---------- Ficha ----------
   function chipFor(id) {
@@ -391,7 +371,7 @@
   // sin eje de años: cada columna es una generación, de lo que influye (izquierda) a lo influido
   // (derecha), y cada género lleva sus años. El botón «+» de cualquier género visible despliega
   // también sus padres e hijos, sin quitar lo anterior.
-  const focus = { root: null, open: new Set() };
+  const focus = { root: null, open: new Set(), moved: new Map() };
   const parentsOf = (id) => byId.get(id).influences.filter((p) => byId.has(p));
   const relatives = (id) => [...parentsOf(id), ...children.get(id)];
   const nameKey = (g) => `${g.name} (${g.start}–${g.end ?? '…'})`;
@@ -405,6 +385,7 @@
   function pickFocus(id) {
     focus.root = id;
     focus.open = new Set([id]);
+    focus.moved.clear();
     $('#fq').value = nameKey(byId.get(id));
     renderFocus();
     history.replaceState(null, '', '#focus=' + id);
@@ -477,8 +458,28 @@
       c.forEach((id) => xOf.set(id, cx));
       cx += Math.max(...c.map((id) => wOf.get(id))) + GAP_X;
     }
-    const W = cx - GAP_X + PAD;
-    const H = PAD * 2 + most * (NODE_H + GAP_Y) - GAP_Y;
+    // Las cajas que se han arrastrado se quedan donde se soltaron.
+    for (const [id, p] of focus.moved) if (xOf.has(id)) { xOf.set(id, p.x); yOf.set(id, p.y); }
+    const W = Math.max(cx - GAP_X, ...ids.map((id) => xOf.get(id) + wOf.get(id))) + PAD;
+    const H = Math.max(PAD * 2 + most * (NODE_H + GAP_Y) - GAP_Y, ...ids.map((id) => yOf.get(id) + NODE_H + PAD));
+    // Flecha de p a id: de lado a lado si una caja queda a la izquierda de la otra; si se solapan en
+    // horizontal (porque se ha movido una), de arriba abajo.
+    const edgeD = (p, id) => {
+      const ax = xOf.get(p), ay = yOf.get(p), aw = wOf.get(p), bx = xOf.get(id), by = yOf.get(id), bw = wOf.get(id);
+      let x1, y1, x2, y2;
+      if (bx - 2 >= ax + aw || bx + bw + 2 <= ax) {
+        const right = bx >= ax + aw;
+        x1 = right ? ax + aw : ax; x2 = right ? bx - 2 : bx + bw + 2;
+        y1 = ay + NODE_H / 2; y2 = by + NODE_H / 2;
+        const dx = (right ? 1 : -1) * Math.max(40, Math.abs(x2 - x1) / 2);
+        return `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+      }
+      const down = by >= ay;
+      x1 = ax + aw / 2; x2 = bx + bw / 2;
+      y1 = down ? ay + NODE_H : ay; y2 = down ? by - 2 : by + NODE_H + 2;
+      const dy = (down ? 1 : -1) * Math.max(20, Math.abs(y2 - y1) / 2);
+      return `M${x1},${y1} C${x1},${y1 + dy} ${x2},${y2 - dy} ${x2},${y2}`;
+    };
     const defs = el('defs', {}, svg);
     const mk = el('marker', { id: 'farrow', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
     el('path', { d: 'M0,1 L10,5 L0,9 z', fill: 'context-stroke' }, mk);
@@ -486,11 +487,8 @@
     const nodes = el('g', {}, svg);
     // Flechas de la influencia a lo influido; las que no tocan un género desplegado, más tenues.
     for (const id of ids) for (const p of ups(id)) {
-      const x1 = xOf.get(p) + wOf.get(p), y1 = yOf.get(p) + NODE_H / 2;
-      const x2 = xOf.get(id) - 2, y2 = yOf.get(id) + NODE_H / 2;
-      const dx = Math.max(40, Math.abs(x2 - x1) / 2);
       const near = focus.open.has(p) || focus.open.has(id);
-      el('path', { class: 'edge' + (near ? '' : ' far'), 'data-a': p, 'data-b': id, d: `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`, stroke: FAMILIES[byId.get(p).family].color, 'marker-end': 'url(#farrow)' }, links);
+      el('path', { class: 'edge' + (near ? '' : ' far'), 'data-a': p, 'data-b': id, d: edgeD(p, id), stroke: FAMILIES[byId.get(p).family].color, 'marker-end': 'url(#farrow)' }, links);
     }
     for (const id of ids) {
       const g = byId.get(id), fam = FAMILIES[g.family];
@@ -502,6 +500,40 @@
       el('text', { class: 'yrs', x: gx + 14, y: gy + 32 }, node).textContent = `${g.start}–${g.end ?? '…'}`;
       el('title', {}, node).textContent = `${g.name} (${g.start}–${g.end ?? '…'}) · ${fam.name} · clic para abrir la ficha`;
       node.addEventListener('click', (e) => { e.stopPropagation(); open(id); });
+      // Arrastrar una caja la mueve con sus flechas, para ver mejor de dónde salen y adónde llegan; se
+      // queda donde se suelta hasta elegir otro género o pulsar «Reiniciar». Soltarla no abre la ficha.
+      let drag = null;
+      node.addEventListener('pointerdown', (e) => {
+        if (e.button > 0 || e.target.closest('.fbtn')) return;
+        drag = { px: e.clientX, py: e.clientY, x: xOf.get(id), y: yOf.get(id), moved: false };
+        node.setPointerCapture(e.pointerId);
+      });
+      node.addEventListener('pointermove', (e) => {
+        if (!drag) return;
+        const dx = e.clientX - drag.px, dy = e.clientY - drag.py;
+        if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+        drag.moved = true;
+        node.classList.add('drag');
+        xOf.set(id, Math.max(0, drag.x + dx));
+        yOf.set(id, Math.max(0, drag.y + dy));
+        node.setAttribute('transform', `translate(${xOf.get(id) - gx},${yOf.get(id) - gy})`);
+        links.querySelectorAll('.edge').forEach((p) => { if (p.dataset.a === id || p.dataset.b === id) p.setAttribute('d', edgeD(p.dataset.a, p.dataset.b)); });
+      });
+      const drop = () => {
+        if (!drag) return;
+        if (drag.moved) {
+          focus.moved.set(id, { x: xOf.get(id), y: yOf.get(id) });
+          node.classList.remove('drag');
+          svg.setAttribute('width', Math.max(+svg.getAttribute('width'), xOf.get(id) + gw + PAD));
+          svg.setAttribute('height', Math.max(+svg.getAttribute('height'), yOf.get(id) + NODE_H + PAD));
+          const eat = (e) => e.stopPropagation();
+          window.addEventListener('click', eat, true);
+          setTimeout(() => window.removeEventListener('click', eat, true));
+        }
+        drag = null;
+      };
+      node.addEventListener('pointerup', drop);
+      node.addEventListener('pointercancel', drop);
       // Al pasar por un género se resaltan sus flechas y sus vecinos.
       node.addEventListener('mouseenter', () => {
         const near = new Set([id, ...ups(id), ...downs(id)]);
@@ -553,16 +585,19 @@
     matches: trackMatches, isKey: (t) => t.ess, keyLabel: 'Solo esenciales ★', keyName: 'esencial',
     where: (r) => r.chs.slice().sort((a, b) => a - b).map((c) => esc(chapterName(c))).join(' · '),
   });
-  // Pestaña «Menciones» (menciones.js, común a todas las webs de Music_Books).
-  const menciones = Menciones({ all, FAMILIES, esc, trackHtml, togglePlayer, open, portadas, data: window.LOOPS_COVERS,
+  // Menciones en el Timeline (menciones.js, común a todas las webs de Music_Books).
+  const menciones = Menciones({ redraw: () => { renderTimeline(); stickMain(); },
+    reveal: (id) => { const p = pos.get(id); if (p) { sc.scrollLeft = Math.max(0, p.x - 160); sc.scrollTop = Math.max(0, p.y - 60); } },
+    all, FAMILIES, esc, trackHtml, togglePlayer, open, portadas, data: window.LOOPS_COVERS,
     pageLink: (m) => `Loops ${m[0]} · ${pageLink({ book: m[0], pdf: m[1] })}` });
   function render() {
     $('#ftoggle').classList.toggle('active', !!state.q || state.off.size > 0);
-    renderTimeline(); renderList(); renderDiscs(); portadas.render(); stickMain(); fitScrollers(); }
+    renderTimeline(); renderDiscs(); portadas.render(); stickMain(); fitScrollers(); }
   render();
   const hash = location.hash.slice(1);
   if (hash.startsWith('focus=') && byId.has(hash.slice(6))) showFocus(hash.slice(6));
   else if (byId.has(hash)) open(hash);
   // Arrancar la vista en 1940 aprox., donde empieza la densidad
   $('#scroller').scrollLeft = x(1940) - 40;
+  menciones.start();
 })();

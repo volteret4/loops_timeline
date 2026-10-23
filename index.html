@@ -25,17 +25,16 @@
   <div class="views" role="tablist">
     <button data-view="timeline" class="on">Timeline</button>
     <button data-view="focus">Mapa de influencias</button>
-    <button data-view="list">Lista</button>
-    <button data-view="discs">Discos</button>
+    <button data-view="discs">Capítulos | Géneros</button>
     <button data-view="covers">Portadas</button>
-    <button data-view="mentions">Menciones</button>
   </div>
   <div class="families" id="families"></div>
 </nav>
 
 <main>
   <section id="timeline" class="view on">
-    <p class="hint"><span class="mouse">Pasa el ratón por un género para ver de dónde viene (líneas entrantes) y qué engendra (salientes). Clic para abrir la ficha; clic en una zona vacía para cerrarla.</span><span class="touch">Desliza para recorrer los años; toca un género para abrir su ficha.</span></p>
+    <p class="hint"><span class="mouse">Pasa el ratón por un género para ver de dónde viene (líneas entrantes) y qué engendra (salientes). Clic para abrir la ficha; clic en una zona vacía para cerrarla. Con «Menciones» eliges qué géneros despliegan sus artistas; clic en un artista para ver los pasajes que lo nombran.</span><span class="touch">Desliza para recorrer los años; toca un género para abrir su ficha.</span></p>
+    <div class="mctl" id="mctl"></div>
     <div class="scroller" id="scroller"><svg id="svg"></svg></div>
   </section>
   <section id="focus" class="view">
@@ -44,13 +43,11 @@
       <datalist id="focus-names"></datalist>
       <button id="freset" type="button">Reiniciar</button>
     </div>
-    <p class="hint" id="fhint">Escribe y elige un género: verás un mapa con los que lo influyen (a su izquierda) y los que influye (a su derecha), cada uno con sus años; las flechas van de la influencia a lo influido. Pulsa «+» en cualquiera para desplegar también sus relaciones; pasa el ratón por uno para resaltar sus flechas; clic abre su ficha.</p>
+    <p class="hint" id="fhint">Escribe y elige un género: verás un mapa con los que lo influyen (a su izquierda) y los que influye (a su derecha), cada uno con sus años; las flechas van de la influencia a lo influido. Pulsa «+» en cualquiera para desplegar también sus relaciones; pasa el ratón por uno para resaltar sus flechas; arrástralo para moverlo; clic abre su ficha.</p>
     <div class="scroller" id="fscroller"><svg id="fsvg"></svg></div>
   </section>
-  <section id="list" class="view"></section>
   <section id="discs" class="view discs"></section>
   <section id="covers" class="view"></section>
-  <section id="mentions" class="view"></section>
 </main>
 
 <aside id="panel" aria-hidden="true">

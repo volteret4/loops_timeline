@@ -1,31 +1,34 @@
-// Pestaña «Menciones»: se eligen uno o varios géneros o escenas (en un orden que se cambia
-// arrastrando sus fichas) y se ve un timeline por cada uno con una barra por artista, partida en los discos que el libro cita de él (cada tramo, del color de su género). Al pulsar un
-// artista, la ficha lateral muestra los pasajes del libro que lo nombran y la lista de sus discos y
-// canciones con su vídeo. Es el mismo fichero en todas las webs de Music_Books: cada app.js lo
-// llama con Menciones({…}) y le pasa la pestaña Portadas, que ya agrupa las canciones por disco.
+// Menciones, dentro del Timeline: un desplegable (con búsqueda difusa, «Mostrar todos» y «Mostrar
+// ninguno») elige qué géneros o escenas despliegan bajo su barra una fila por artista, en el mismo
+// eje de años. Cada fila va del primer al último álbum del artista; con la casilla «Discos», se
+// parte en sus álbumes: rellenos, los que cita el libro (del color de la familia del género en que
+// los cita), y solo con borde, el resto de sus álbumes de estudio según MusicBrainz; el borde, del
+// color del género desplegado. Al pulsar un artista, la ficha lateral muestra los pasajes del libro
+// que lo nombran y sus discos con vídeo. Es el mismo fichero en todas las webs de Music_Books: cada
+// app.js lo llama con Menciones({…}), le pasa la pestaña Portadas (que ya agrupa las canciones por
+// disco) y, al dibujar el timeline, le pide el alto (height) y el dibujo (draw) de cada género.
 // Los pasajes (window.<ESPACIO>_MENTIONS, data/mentions.js) los genera tools/pdfpages.py a partir
 // del PDF del libro, y el resto de álbumes de cada artista (window.<ESPACIO>_DISCOS, data/discos.js)
-// tools/discos.py a partir de MusicBrainz; pesan bastante, así que se cargan al abrir la pestaña.
+// tools/discos.py a partir de MusicBrainz; pesan bastante, así que se cargan al hacer falta.
 window.Menciones = function (cfg) {
-  const { all, FAMILIES, esc, trackHtml, togglePlayer, open, portadas, pageLink, data } = cfg;
+  const { all, FAMILIES, esc, trackHtml, togglePlayer, open, portadas, pageLink, data, redraw, reveal } = cfg;
   const $ = (s) => document.querySelector(s);
-  const box = $('#mentions');
-  const LABEL = 200, ROW = 26, MIN_PX = 14;
-  // Colores para los demás géneros de la vista; el elegido conserva el de su familia.
-  const PALETTE = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6',
-    '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#aaffc3', '#808000', '#ffd8b1', '#a9a9a9'];
+  const NS = 'http://www.w3.org/2000/svg';
+  const AROW = 20, AH = 12;
+  const box = $('#mctl');
 
-  const groups = [...portadas.groups.values()];
   const byArtist = portadas.byArtist;
+  // Los recopilatorios («Varios», «Various Artists»…) no son un artista: no llevan fila.
+  const VARIOS = /^(varios( artistas)?|various( artists)?|vv\.? ?aa\.?|v\/a|va)$/i;
   const artistsOf = new Map(all.map((g) => [g, new Set()]));
-  for (const gr of groups) for (const g of gr.genres) artistsOf.get(g)?.add(gr.a);
+  for (const gr of portadas.groups.values()) if (!VARIOS.test(gr.a.trim())) for (const g of gr.genres) artistsOf.get(g)?.add(gr.a);
   const genres = all.filter((g) => artistsOf.get(g).size).sort((a, b) => a.start - b.start || a.name.localeCompare(b.name, 'es'));
-  // gs: los géneros elegidos, en el orden en que se apilan sus timelines (se reordenan a mano).
-  const st = { gs: genres.length ? [genres[0]] : [], artist: null };
   const byId = (id) => genres.find((g) => g.id === id);
+  // on: los géneros desplegados; discos: filas partidas en álbumes; artist: el de la ficha abierta.
+  const st = { on: new Set(), discos: false, artist: null, q: '' };
 
-  // Datos que pesan y solo se cargan al abrir la pestaña o una ficha: los pasajes del libro
-  // (data/mentions.js, de tools/pdfpages.py) y las discografías (data/discos.js, de tools/discos.py).
+  // Datos que pesan y solo se cargan al hacer falta: los pasajes del libro (data/mentions.js, de
+  // tools/pdfpages.py) y las discografías (data/discos.js, de tools/discos.py).
   const lazy = {};
   function load(file, suffix) {
     const key = () => Object.keys(window).find((k) => k.endsWith(suffix));
@@ -39,196 +42,165 @@ window.Menciones = function (cfg) {
     return lazy[file];
   }
   let M = null, DISCOS = null;
+  const needDiscos = () => {
+    if (DISCOS || !st.on.size) return;
+    load('discos', '_DISCOS').then((d) => { DISCOS = d; memo.clear(); redraw(); });
+  };
 
   // Lo que se dibuja de cada artista: los discos que cita el libro (agrupados como en Portadas)
-  // y el resto de sus álbumes según MusicBrainz, sin colorear.
+  // y el resto de sus álbumes según MusicBrainz.
   const CUR = new Date().getFullYear();
   const nkey = (s) => s.toLowerCase().replace(/\([^)]*\)|\[[^\]]*\]/g, '').normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, '');
+  const memo = new Map();
   function entries(a) {
+    if (memo.has(a)) return memo.get(a);
     const mine = byArtist.get(a) || [];
     const cited = new Set(mine.flatMap((gr) => [gr.t, ...gr.items.map((r) => r.t)]).map(nkey));
     const out = mine.filter((gr) => gr.y).map((gr) => ({ y: gr.y, t: gr.t, gr }));
     for (const [t, y] of (DISCOS && DISCOS[a]) || []) if (y <= CUR && !cited.has(nkey(t))) out.push({ y, t });
-    return out.sort((p, q) => p.y - q.y || !!q.gr - !!p.gr || p.t.localeCompare(q.t, 'es'));
+    out.sort((p, q) => p.y - q.y || !!q.gr - !!p.gr || p.t.localeCompare(q.t, 'es'));
+    memo.set(a, out);
+    return out;
+  }
+  // Artistas de un género, por el año de su primer disco citado.
+  const first = (d) => (d.find((e) => e.gr) || d[0]).y;
+  const rowsOf = (G) => [...artistsOf.get(G)].map((a) => ({ a, d: entries(a) })).filter((o) => o.d.length)
+    .sort((x, y) => first(x.d) - first(y.d) || x.a.localeCompare(y.a, 'es'));
+
+  // Lo que app.js pregunta al dibujar el timeline: el alto extra de un género y hasta qué año llega.
+  const height = (G) => st.on.has(G) ? rowsOf(G).length * AROW + 6 : 0;
+  function lastYear() {
+    let y = 0;
+    for (const G of st.on) for (const { d } of rowsOf(G)) y = Math.max(y, d[d.length - 1].y + 1);
+    return y;
   }
 
-  function render() {
-    const GS = st.gs;
-    if (!genres.length) { box.innerHTML = '<p class="hint">No hay discos en los datos.</p>'; return; }
-    // Un timeline por género elegido, en su orden; un artista de varios sale en cada uno.
-    const byYear = (x, y) => (x.d.find((e) => e.gr) || x.d[0]).y - (y.d.find((e) => e.gr) || y.d[0]).y || x.a.localeCompare(y.a, 'es');
-    const memo = new Map();
-    const sections = GS.map((G) => ({
-      G, artists: [...artistsOf.get(G)].map((a) => {
-        if (!memo.has(a)) memo.set(a, entries(a));
-        return { a, d: memo.get(a) };
-      }).filter((o) => o.d.length).sort(byYear),
-    }));
-    // Color por género: los elegidos, el de su familia (o de la paleta si otro elegido ya lo usa);
-    // los demás, de la paleta por orden de aparición. Un disco citado en varios géneros toma el
-    // de su sección si es uno de ellos, si no el de otro elegido.
-    const colors = new Map();
-    let pal = 0;
-    const nextPal = () => {
-      const used = new Set(colors.values());
-      for (let i = 0; i < PALETTE.length; i++) { const c = PALETTE[(pal + i) % PALETTE.length]; if (!used.has(c)) { pal += i + 1; return c; } }
-      return PALETTE[pal++ % PALETTE.length];
+  // Dibuja las filas de artistas de G en la capa layer del SVG, desde la altura y0, con la escala x.
+  function draw(G, layer, y0, x) {
+    const el = (tag, attrs, parent) => {
+      const n = document.createElementNS(NS, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      parent.appendChild(n);
+      return n;
     };
-    for (const G of GS) colors.set(G, [...colors.values()].includes(FAMILIES[G.family].color) ? nextPal() : FAMILIES[G.family].color);
-    const count = new Map();
-    const seen = new Set();
-    let cited = 0, other = 0;
-    const colorOf = (gr, G) => {
-      const g = gr.genres.includes(G) ? G : gr.genres.find((x) => GS.includes(x)) || gr.genres[0];
-      if (!colors.has(g)) colors.set(g, nextPal());
-      return g;
-    };
-    for (const { G, artists } of sections) for (const o of artists) for (const e of o.d) {
-      const first = !seen.has(e);
-      seen.add(e);
-      if (!e.gr) { if (first) other++; continue; }
-      const g = colorOf(e.gr, G);
-      if (first) { cited++; count.set(g, (count.get(g) || 0) + 1); }
-    }
-    const ys = sections.flatMap((s) => s.artists.flatMap((o) => o.d.map((e) => e.y)));
-    const Y0 = ys.length ? Math.min(...ys) : 1950, Y1 = ys.length ? Math.max(...ys) + 1 : 2000;
-    const width = (box.clientWidth || window.innerWidth - 48) - LABEL - 24;
-    const PX = Math.max(MIN_PX, width / Math.max(1, Y1 - Y0));
-    const x = (y) => (y - Y0) * PX;
-    const W = x(Y1) + 8;
-
-    const opts = '<option value="">+ Añadir un género o escena…</option>' + Object.entries(FAMILIES).map(([f, F]) => {
-      const list = genres.filter((g) => g.family === f && !GS.includes(g));
-      return list.length ? `<optgroup label="${esc(F.name)}">${list.map((g) => `<option value="${esc(g.id)}">${esc(g.name)} (${artistsOf.get(g).size})</option>`).join('')}</optgroup>` : '';
-    }).join('');
-    // Los elegidos, como fichas que se quitan con ✕ (se reordenan arrastrando su cabecera en el timeline).
-    const picked = GS.map((G, i) => `<span class="mpick" data-i="${i}"><i style="background:${colors.get(G)}"></i>${esc(G.name)}<button data-rm title="Quitar">✕</button></span>`).join('');
-    const legend = [...colors].filter(([g]) => count.get(g)).map(([g, c]) => `<button class="mlg${GS.includes(g) ? ' on' : ''}" data-g="${esc(g.id)}" title="${GS.includes(g) ? esc(g.name) : 'Añadir ' + esc(g.name)}"><i style="background:${c}"></i>${esc(g.name)} <span>${count.get(g) || 0}</span></button>`).join('')
-      + (other ? `<span class="mlg out" title="Álbumes del artista según MusicBrainz que el libro no cita"><i></i>No citados en el libro <span>${other}</span></span>` : '');
-    let axis = '';
-    const step = PX >= 40 ? 1 : PX >= 16 ? 5 : 10;
-    for (let y = Math.ceil(Y0 / step) * step; y <= Y1; y += step) axis += `<span style="left:${x(y)}px">${y}</span>`;
-    const rowsOf = (G, artists) => artists.map(({ a, d }) => {
-      // Cada disco ocupa su año (los del mismo año se lo reparten); una línea une el primero y el último.
+    const col = (g) => FAMILIES[g.family].color;
+    const mine = col(G);
+    rowsOf(G).forEach(({ a, d }, i) => {
+      const y = y0 + i * AROW;
       const years = [...new Set(d.map((e) => e.y))];
-      const line = `<i class="mline" style="left:${x(years[0])}px;width:${x(years[years.length - 1] + 1) - x(years[0])}px"></i>`;
-      const segs = line + years.map((y) => {
-        const same = d.filter((e) => e.y === y);
-        const span = 1;
-        return same.map((e, j) => {
-          const l = x(y) + (span * PX * j) / same.length, w = (span * PX) / same.length;
-          const style = `left:${l}px;width:${Math.max(3, w - 1)}px`;
-          if (!e.gr) return `<span class="mseg out" style="${style}" title="${esc(`${e.t} (${e.y}) · no lo cita el libro`)}">${w > 46 ? esc(e.t) : ''}</span>`;
-          const gr = e.gr;
-          const tip = `${gr.t} (${gr.y}) · ${gr.genres.map((g) => g.name).join(', ')}${gr.items.length > 1 ? '\n' + gr.items.map((r) => '· ' + r.t).join('\n') : ''}`;
-          return `<span class="mseg${gr.isKey ? ' key' : ''}" style="${style};background:${colors.get(colorOf(gr, G))}" title="${esc(tip)}">${w > 46 ? esc(gr.t) : ''}</span>`;
-        }).join('');
-      }).join('');
-      const n = M && M[a] ? M[a].length : null;
-      return `<div class="mrow${a === st.artist ? ' on' : ''}" data-a="${esc(a)}"><button class="mname" title="${esc(a)}">${esc(a)}${n ? ` <span>${n}</span>` : ''}</button><div class="mbar" style="width:${W}px">${segs}</div></div>`;
-    }).join('');
-    // Con varios géneros, cada timeline va en un bloque con una cabecera fija a la izquierda, cuya
-    // asa (⠿) se arrastra arriba o abajo para cambiar el orden.
-    const rows = GS.length > 1 ? sections.map(({ G, artists }, i) => `<div class="mblock" data-i="${i}">
-        <div class="msec"><span style="border-color:${colors.get(G)}"><b class="mgrab" title="Arrastra para reordenar">⠿</b>${esc(G.name)} <small>${artists.length} ${artists.length === 1 ? 'artista' : 'artistas'}</small></span></div>
-        ${rowsOf(G, artists)}</div>`).join('') : sections.map(({ G, artists }) => rowsOf(G, artists)).join('');
-    const nArtists = new Set(sections.flatMap((s) => s.artists.map((o) => o.a))).size;
-    box.innerHTML = `<div class="dbar mhead"><label>Géneros o escenas <select data-mg>${opts}</select></label>
-        <span>${nArtists} artistas · ${cited} discos citados${other ? ` · ${other} álbumes no citados` : ''} · ${Y0}–${Y1 - 1}</span></div>
-      <div class="mpicks">${picked || '<span class="fine">Elige uno o varios géneros en el desplegable.</span>'}</div>
-      <div class="mlegend">${legend}</div>
-      <div class="mscroll"><div class="mgrid" style="width:${LABEL + W}px;--label:${LABEL}px">
-        <div class="maxis" style="width:${W}px">${axis}</div>${rows}</div></div>
-      <p class="fine">Cada fila es un artista, con sus discos en el año en que salieron: en color, los que cita el libro (las canciones de un mismo disco forman un tramo), del color del género en que los cita; con borde, el resto de sus álbumes de estudio según MusicBrainz. Pulsa un artista para ver los pasajes que lo nombran. Se pueden añadir varios géneros (también pulsando su color en la leyenda): cada uno tiene su timeline, que se reordena arrastrando el asa ⠿ de su título.</p>`;
-    // Arrancar en los años del primer género elegido.
-    // Las barras se recortan por la izquierda lo que se haya desplazado el timeline, para que no
-    // asomen bajo la columna fija de nombres.
-    const sc = box.querySelector('.mscroll');
-    const clip = () => sc.firstElementChild.style.setProperty('--sl', sc.scrollLeft + 'px');
-    sc.addEventListener('scroll', clip, { passive: true });
-    if (GS.length) sc.scrollLeft = Math.max(0, x(Math.max(Y0, Math.min(...GS.map((g) => g.start)))) - 40);
-    clip();
+      const x0 = x(years[0]), x1 = x(years[years.length - 1] + 1);
+      const n = M && M[a] ? M[a].length : 0;
+      const label = a + (n ? ` · ${n}` : '');
+      const row = el('g', { class: 'mart' + (a === st.artist ? ' on' : ''), 'data-a': a }, layer);
+      el('rect', { class: 'mhit', x: x0 - label.length * 6.4 - 12, y: y - 3, width: x1 - x0 + label.length * 6.4 + 14, height: AROW }, row);
+      el('text', { class: 'mlabel', x: x0 - 6, y: y + AH - 2, 'text-anchor': 'end' }, row).textContent = label;
+      const cites = d.filter((e) => e.gr).length;
+      if (!st.discos) {
+        el('rect', { class: 'mfix', x: x0, y: y + 2, width: Math.max(4, x1 - x0), height: AH - 4, rx: 4, fill: mine }, row);
+        el('title', {}, row).textContent = `${a} · ${years[0]}–${years[years.length - 1]} · ${cites} ${cites === 1 ? 'disco citado' : 'discos citados'} de ${d.length} · clic para ver sus menciones`;
+        return;
+      }
+      el('rect', { class: 'mline', x: x0, y: y + AH / 2 - 1, width: x1 - x0, height: 2 }, row);
+      // Cada disco ocupa su año (los del mismo año se lo reparten).
+      for (const yr of years) {
+        const same = d.filter((e) => e.y === yr);
+        const w = (x(yr + 1) - x(yr)) / same.length;
+        same.forEach((e, j) => {
+          const s = el('rect', { class: 'mseg' + (e.gr ? (e.gr.isKey ? ' key' : '') : ' out'), x: x(yr) + w * j + 0.5, y, width: Math.max(3, w - 1), height: AH, rx: 2, stroke: mine }, row);
+          if (e.gr) {
+            const g = e.gr.genres.includes(G) ? G : e.gr.genres[0];
+            s.setAttribute('fill', col(g));
+            el('title', {}, s).textContent = `${a} — ${e.gr.t} (${e.gr.y}) · ${e.gr.genres.map((g) => g.name).join(', ')}${e.gr.items.length > 1 ? '\n' + e.gr.items.map((r) => '· ' + r.t).join('\n') : ''}`;
+          } else el('title', {}, s).textContent = `${a} — ${e.t} (${e.y}) · no lo cita el libro`;
+        });
+      }
+    });
   }
 
-  // La selección queda en la URL para poder volver a ella o compartirla.
-  const hashOf = () => '#menciones=' + encodeURIComponent(st.gs.map((g) => g.id).join(',') + (st.artist ? '|' + st.artist : ''));
-  function update() {
-    if (st.gs.length || location.hash.startsWith('#menciones=')) history.replaceState(null, '', hashOf());
-    render();
+  // ---------- Desplegable de géneros y casilla «Discos» ----------
+  const norm = (s) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  // Búsqueda difusa: mejor si el texto aparece seguido (y antes); si no, las letras en orden, con
+  // menos huecos mejor. Devuelve -1 si no casa.
+  function fuzzy(q, s) {
+    s = norm(s);
+    const i = s.indexOf(q);
+    if (i >= 0) return i / 100;
+    let j = 0, gaps = 0, last = -1;
+    for (let k = 0; k < s.length && j < q.length; k++) if (s[k] === q[j]) { if (last >= 0) gaps += k - last - 1; last = k; j++; }
+    return j === q.length ? 1 + gaps : -1;
   }
-  function move(i, j) {
-    if (j < 0 || j >= st.gs.length || i === j) return;
-    const [g] = st.gs.splice(i, 1);
-    st.gs.splice(j, 0, g);
-    update();
+  function found() {
+    const q = norm(st.q.trim());
+    if (!q) return genres;
+    return genres.map((g) => [g, Math.min(...[g.name, ...(g.aka || [])].map((s) => fuzzy(q, s)).map((v) => v < 0 ? Infinity : v))])
+      .filter(([, v]) => v < Infinity).sort((a, b) => a[1] - b[1]).map(([g]) => g);
   }
+  box.innerHTML = `<div class="mdrop"><button type="button" class="mbtn" aria-expanded="false"></button>
+      <div class="mpop" hidden><input type="search" class="mq" placeholder="Buscar (vale a medias o con letras sueltas)…" autocomplete="off">
+        <div class="mall"><button type="button" data-all="1"></button><button type="button" data-all="0"></button></div>
+        <div class="mopts"></div></div></div>
+    <label class="mdisc" title="Cada fila de artista, partida en sus álbumes: rellenos, los que cita el libro; con borde, el resto de sus álbumes de estudio (MusicBrainz)"><input type="checkbox" class="mdiscos"> Discos</label>
+    <span class="mstat"></span>`;
+  const btn = box.querySelector('.mbtn'), pop = box.querySelector('.mpop'), mq = box.querySelector('.mq');
+  function list() {
+    const gs = found();
+    const q = st.q.trim();
+    box.querySelector('[data-all="1"]').textContent = q ? `Mostrar estos (${gs.length})` : 'Mostrar todos';
+    box.querySelector('[data-all="0"]').textContent = q ? 'Quitar estos' : 'Mostrar ninguno';
+    box.querySelector('.mopts').innerHTML = gs.map((g) => `<label class="mopt"><input type="checkbox" data-id="${esc(g.id)}"${st.on.has(g) ? ' checked' : ''}><i style="background:${FAMILIES[g.family].color}"></i>${esc(g.name)} <small>${g.start}–${g.end ?? '…'} · ${artistsOf.get(g).size} ${artistsOf.get(g).size === 1 ? 'artista' : 'artistas'}</small></label>`).join('')
+      || '<p class="fine">Nada coincide.</p>';
+  }
+  function status() {
+    const n = st.on.size;
+    btn.textContent = `Menciones: ${n ? (n === genres.length ? 'todos' : n === 1 ? [...st.on][0].name : `${n} elegidos`) : 'ninguno'} ▾`;
+    const arts = new Set([...st.on].flatMap((G) => [...artistsOf.get(G)]));
+    box.querySelector('.mstat').textContent = n ? `${arts.size} ${arts.size === 1 ? 'artista' : 'artistas'} · clic en uno para ver sus menciones` : '';
+  }
+  // La selección queda en la URL para poder volver a ella o compartirla («*» = todos).
+  const hashOf = () => '#menciones=' + encodeURIComponent((st.on.size === genres.length ? '*' : [...st.on].map((g) => g.id).join(',')) + (st.artist ? '|' + st.artist : ''));
+  function update(focusId) {
+    if (st.on.size) history.replaceState(null, '', hashOf());
+    else if (location.hash.startsWith('#menciones=')) history.replaceState(null, '', location.pathname);
+    status();
+    needDiscos();
+    redraw();
+    if (focusId) reveal(focusId);
+  }
+  const setOpen = (o) => { pop.hidden = !o; btn.setAttribute('aria-expanded', o); if (o) { list(); mq.focus(); } };
+  btn.addEventListener('click', () => setOpen(pop.hidden));
+  document.addEventListener('click', (e) => { if (!pop.hidden && !e.target.closest('.mdrop')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pop.hidden) setOpen(false); });
+  mq.addEventListener('input', () => { st.q = mq.value; list(); });
+  // Intro marca o desmarca el primero de la búsqueda.
+  mq.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const g = found()[0];
+    if (!g) return;
+    st.on.has(g) ? st.on.delete(g) : st.on.add(g);
+    list();
+    update(st.on.has(g) && g.id);
+  });
   box.addEventListener('change', (e) => {
-    if (!e.target.matches('[data-mg]')) return;
-    const g = byId(e.target.value);
-    if (g && !st.gs.includes(g)) st.gs.push(g);
-    update();
+    if (e.target.matches('.mdiscos')) { st.discos = e.target.checked; redraw(); return; }
+    const g = e.target.dataset.id && byId(e.target.dataset.id);
+    if (!g) return;
+    e.target.checked ? st.on.add(g) : st.on.delete(g);
+    update(st.on.has(g) && g.id);
   });
   box.addEventListener('click', (e) => {
-    const pk = e.target.closest('.mpick');
-    if (pk) {
-      if (e.target.closest('[data-rm]')) { st.gs.splice(+pk.dataset.i, 1); update(); }
-      return;
-    }
-    const lg = e.target.closest('.mlg');
-    if (lg) {
-      const g = byId(lg.dataset.g);
-      if (g && !st.gs.includes(g)) { st.gs.push(g); update(); }
-      return;
-    }
-    if (e.target.closest('.msec')) return;
-    const row = e.target.closest('.mrow');
+    const b = e.target.closest('[data-all]');
+    if (!b) return;
+    for (const g of found()) b.dataset.all === '1' ? st.on.add(g) : st.on.delete(g);
+    list();
+    update();
+  });
+  status();
+
+  // Clic en una fila de artista del timeline: su ficha con las menciones.
+  $('#svg').addEventListener('click', (e) => {
+    const row = e.target.closest('.mart');
     if (row) openArtist(row.dataset.a);
   });
-  // Arrastrar el asa de un bloque lo mueve con el puntero (ratón o dedo); al soltarlo, se coloca
-  // entre los bloques según la altura. Cerca de los bordes, el timeline se desplaza solo.
-  let drag = null;
-  box.addEventListener('pointerdown', (e) => {
-    const h = e.target.closest('.mgrab');
-    if (!h || e.button > 0) return;
-    e.preventDefault();
-    const blk = h.closest('.mblock');
-    const sc = box.querySelector('.mscroll');
-    drag = { i: +blk.dataset.i, blk, sc, y0: e.clientY, s0: sc.scrollTop, j: +blk.dataset.i, py: e.clientY };
-    blk.classList.add('drag');
-    h.setPointerCapture(e.pointerId);
-    const tick = () => {
-      if (!drag) return;
-      const r = drag.sc.getBoundingClientRect();
-      const v = drag.py < r.top + 40 ? -12 : drag.py > r.bottom - 40 ? 12 : 0;
-      if (v) { drag.sc.scrollTop += v; place(); }
-      drag.raf = requestAnimationFrame(tick);
-    };
-    drag.raf = requestAnimationFrame(tick);
-  });
-  function place() {
-    const { blk, sc, y0, s0, py } = drag;
-    blk.style.transform = `translateY(${py - y0 + sc.scrollTop - s0}px)`;
-    const others = [...box.querySelectorAll('.mblock')].filter((b) => b !== blk);
-    let j = 0;
-    for (const b of others) { const r = b.getBoundingClientRect(); if (py > r.top + r.height / 2) j++; }
-    drag.j = j;
-    others.forEach((b, k) => { b.classList.toggle('over-top', k === j); b.classList.toggle('over-bottom', j === others.length && k === others.length - 1); });
-  }
-  box.addEventListener('pointermove', (e) => {
-    if (!drag) return;
-    drag.py = e.clientY;
-    place();
-  });
-  const drop = () => {
-    if (!drag) return;
-    cancelAnimationFrame(drag.raf);
-    const { i, j } = drag;
-    drag = null;
-    if (i !== j) move(i, j);
-    else render();
-  };
-  box.addEventListener('pointerup', drop);
-  box.addEventListener('pointercancel', drop);
 
   // Nombres que se resaltan en los pasajes: el completo (sin «and His Orchestra»…) y el apellido.
   function marks(a) {
@@ -253,9 +225,10 @@ window.Menciones = function (cfg) {
 
   async function openArtist(a) {
     st.artist = a;
-    box.querySelectorAll('.mrow').forEach((r) => r.classList.toggle('on', r.dataset.a === a));
+    document.querySelectorAll('#svg .mart').forEach((r) => r.classList.toggle('on', r.dataset.a === a));
+    const fresh = !M;
     M = await load('mentions', '_MENTIONS');
-    if (!DISCOS) DISCOS = await load('discos', '_DISCOS');
+    if (!DISCOS) { DISCOS = await load('discos', '_DISCOS'); memo.clear(); }
     const A = (data && data.a && data.a[a]) || {};
     const mine = (byArtist.get(a) || []).slice().sort((x, y) => (x.y || 9999) - (y.y || 9999));
     const items = mine.flatMap((gr) => gr.items);
@@ -285,31 +258,33 @@ window.Menciones = function (cfg) {
     $('#panel').scrollTop = 0;
     history.replaceState(null, '', hashOf());
     // Ya cargados los pasajes, las filas muestran cuántos tiene cada artista.
-    if (!box.querySelector('.mname span')) render();
+    if (fresh) redraw();
   }
 
-  const view = document.querySelector('.views button[data-view="mentions"]');
-  view.addEventListener('click', () => {
-    requestAnimationFrame(render);
-    if (!DISCOS) load('discos', '_DISCOS').then((d) => { DISCOS = d; render(); });
-  });
-  render();
+  // Selección guardada en la URL (#menciones=id1,id2|Artista, o * para todos).
   const h = decodeURIComponent(location.hash.slice(1));
+  let pending = null;
   if (h.startsWith('menciones=')) {
     const [ids, a] = h.slice(10).split('|');
-    const gs = [...new Set(ids.split(',').map(byId).filter(Boolean))];
-    if (gs.length) st.gs = gs;
-    view.click();
-    if (a) openArtist(a);
+    for (const g of ids === '*' ? genres : ids.split(',').map(byId).filter(Boolean)) st.on.add(g);
+    status();
+    needDiscos();
+    pending = { id: [...st.on][0]?.id, a };
   }
-  // Desde la ficha de un género (app.js): abrir la pestaña solo con ese género.
+  // Desde la ficha de un género (app.js): desplegarlo en el timeline y llevarlo a la vista.
   function show(id) {
     const g = byId(id);
     if (!g) return;
-    st.gs = [g];
+    st.on.add(g);
     st.artist = null;
-    view.click();
-    update();
+    document.querySelector('.views button[data-view="timeline"]').click();
+    update(id);
   }
-  return { render, show, has: (id) => !!byId(id) };
+  // app.js lo llama tras el primer dibujo: llevar a la vista lo que pedía la URL.
+  function start() {
+    if (!pending) return;
+    if (pending.id) reveal(pending.id);
+    if (pending.a) openArtist(pending.a);
+  }
+  return { height, lastYear, draw, show, start, has: (id) => !!byId(id) };
 };
