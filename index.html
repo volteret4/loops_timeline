@@ -24,11 +24,9 @@
   <button id="ftoggle" class="ftoggle" type="button" aria-expanded="false">Filtros</button>
   <div class="views" role="tablist">
     <button data-view="timeline" class="on">Timeline</button>
-    <button data-view="focus">Individual</button>
+    <button data-view="focus">Mapa de influencias</button>
     <button data-view="list">Lista</button>
     <button data-view="discs">Discos</button>
-    <button data-view="ess">Esenciales</button>
-    <button data-view="bych">Capítulos</button>
     <button data-view="covers">Portadas</button>
     <button data-view="mentions">Menciones</button>
   </div>
@@ -46,13 +44,11 @@
       <datalist id="focus-names"></datalist>
       <button id="freset" type="button">Reiniciar</button>
     </div>
-    <p class="hint" id="fhint">Escribe y elige un género: verás de qué géneros viene y a cuáles influye. Pulsa «+» en cualquiera de ellos para desplegar también sus relaciones; clic en un género abre su ficha.</p>
+    <p class="hint" id="fhint">Escribe y elige un género: verás un mapa con los que lo influyen (a su izquierda) y los que influye (a su derecha), cada uno con sus años; las flechas van de la influencia a lo influido. Pulsa «+» en cualquiera para desplegar también sus relaciones; pasa el ratón por uno para resaltar sus flechas; clic abre su ficha.</p>
     <div class="scroller" id="fscroller"><svg id="fsvg"></svg></div>
   </section>
   <section id="list" class="view"></section>
   <section id="discs" class="view discs"></section>
-  <section id="ess" class="view discs"></section>
-  <section id="bych" class="view discs"></section>
   <section id="covers" class="view"></section>
   <section id="mentions" class="view"></section>
 </main>

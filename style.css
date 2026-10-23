@@ -98,6 +98,7 @@ ol.tracks .pgs a.pg:hover { color: var(--accent); }
 ol.tracks .act a, ol.tracks .act button { display: inline-block; border: 1px solid var(--line); background: var(--bg); color: var(--accent); border-radius: 4px; padding: 0 6px; margin-left: 2px; font: 12px/18px inherit; text-decoration: none; cursor: pointer; }
 .player { margin: 6px 0 10px; aspect-ratio: 16 / 9; }
 .player iframe { width: 100%; height: 100%; border: 0; border-radius: 6px; }
+.discs .player { max-width: 560px; }
 
 .hint .touch { display: none; }
 @media (hover: none) {
@@ -135,6 +136,22 @@ svg .fbtn { cursor: pointer; }
 svg .fbtn rect { fill: var(--surface); stroke: var(--line); }
 svg .fbtn text { fill: var(--ink); font-size: 14px; font-weight: 700; }
 svg .fbtn:hover rect { stroke: var(--ink); }
+/* Mapa de influencias: cajas con nombre y años, flechas de la influencia a lo influido */
+#fsvg { display: block; }
+#fsvg .node { cursor: pointer; transition: opacity .15s; }
+#fsvg .node .box { fill: var(--surface); stroke-width: 1.5; }
+#fsvg .node text { pointer-events: none; }
+#fsvg .node .name { font-size: 13px; font-weight: 600; }
+#fsvg .node .yrs { fill: var(--muted); font-size: 11px; }
+#fsvg .node.root .box { stroke: var(--ink); stroke-width: 2.5; }
+#fsvg .node.expanded:not(.root) .box { stroke-dasharray: 5 3; }
+#fsvg .node:hover .box { fill: var(--bg); }
+#fsvg .edge { fill: none; stroke-width: 1.8; opacity: .8; transition: opacity .15s; }
+#fsvg .edge.far { opacity: .3; }
+#fsvg.hov .node:not(.hit) { opacity: .3; }
+#fsvg.hov .edge { opacity: .07; }
+#fsvg.hov .edge.hit { opacity: 1; stroke-width: 2.5; }
+.tobtns { display: flex; flex-wrap: wrap; gap: 6px; }
 #focus .fbar, #focus .hint { padding: 0 24px; }
 
 /* Discos, esenciales y por capítulo */

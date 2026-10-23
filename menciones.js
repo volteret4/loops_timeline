@@ -302,5 +302,14 @@ window.Menciones = function (cfg) {
     view.click();
     if (a) openArtist(a);
   }
-  return { render };
+  // Desde la ficha de un género (app.js): abrir la pestaña solo con ese género.
+  function show(id) {
+    const g = byId(id);
+    if (!g) return;
+    st.gs = [g];
+    st.artist = null;
+    view.click();
+    update();
+  }
+  return { render, show, has: (id) => !!byId(id) };
 };
