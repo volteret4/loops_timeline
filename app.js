@@ -505,12 +505,18 @@
       let drag = null;
       node.addEventListener('pointerdown', (e) => {
         if (e.button > 0 || e.target.closest('.fbtn')) return;
-        drag = { px: e.clientX, py: e.clientY, x: xOf.get(id), y: yOf.get(id), moved: false };
+        drag = { px: e.clientX, py: e.clientY, sx: box.scrollLeft, sy: box.scrollTop, x: xOf.get(id), y: yOf.get(id), moved: false };
         node.setPointerCapture(e.pointerId);
       });
       node.addEventListener('pointermove', (e) => {
         if (!drag) return;
-        const dx = e.clientX - drag.px, dy = e.clientY - drag.py;
+        // Cerca del borde de la ventana, el mapa se desplaza solo para seguir arrastrando.
+        const r = box.getBoundingClientRect();
+        if (drag.moved) {
+          box.scrollLeft += e.clientX > r.right - 30 ? 12 : e.clientX < r.left + 30 ? -12 : 0;
+          box.scrollTop += e.clientY > r.bottom - 30 ? 12 : e.clientY < r.top + 30 ? -12 : 0;
+        }
+        const dx = e.clientX - drag.px + box.scrollLeft - drag.sx, dy = e.clientY - drag.py + box.scrollTop - drag.sy;
         if (!drag.moved && Math.hypot(dx, dy) < 4) return;
         drag.moved = true;
         node.classList.add('drag');
@@ -518,14 +524,14 @@
         yOf.set(id, Math.max(0, drag.y + dy));
         node.setAttribute('transform', `translate(${xOf.get(id) - gx},${yOf.get(id) - gy})`);
         links.querySelectorAll('.edge').forEach((p) => { if (p.dataset.a === id || p.dataset.b === id) p.setAttribute('d', edgeD(p.dataset.a, p.dataset.b)); });
+        svg.setAttribute('width', Math.max(+svg.getAttribute('width'), xOf.get(id) + gw + PAD));
+        svg.setAttribute('height', Math.max(+svg.getAttribute('height'), yOf.get(id) + NODE_H + PAD));
       });
       const drop = () => {
         if (!drag) return;
         if (drag.moved) {
           focus.moved.set(id, { x: xOf.get(id), y: yOf.get(id) });
           node.classList.remove('drag');
-          svg.setAttribute('width', Math.max(+svg.getAttribute('width'), xOf.get(id) + gw + PAD));
-          svg.setAttribute('height', Math.max(+svg.getAttribute('height'), yOf.get(id) + NODE_H + PAD));
           const eat = (e) => e.stopPropagation();
           window.addEventListener('click', eat, true);
           setTimeout(() => window.removeEventListener('click', eat, true));
@@ -556,8 +562,9 @@
         });
       }
     }
-    svg.setAttribute('width', W);
-    svg.setAttribute('height', H);
+    // El lienzo llega al menos al borde de la ventana, para tener sitio donde dejar las cajas.
+    svg.setAttribute('width', Math.max(W, box.clientWidth));
+    svg.setAttribute('height', Math.max(H, box.clientHeight - 4));
     box.scrollLeft = Math.max(0, xOf.get(focus.root) - box.clientWidth / 3);
     box.scrollTop = Math.max(0, yOf.get(focus.root) - box.clientHeight / 2);
   }
